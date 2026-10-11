@@ -2,8 +2,8 @@
 
 ## Local configuration
 
-- `.env.example` contains variable names and a clearly marked replacement placeholder only. A real local `.env` is ignored by Git and must never be committed.
-- Compose requires database name, user, and password through environment substitution; credentials are not embedded in Compose. The host port binds to `127.0.0.1` by default.
+- `POSTGRES_PASSWORD` is intentionally blank in `.env.example`. Developers must set a non-empty local password in their untracked `.env`; Compose rejects missing or blank password configuration. Never commit the local database password or a populated `.env` file.
+- No actual passwords belong in documentation or source control. Compose receives database configuration through environment substitution; credentials are not embedded in Compose. The host port binds to `127.0.0.1` by default.
 - Do not place secrets in source, docs, examples, test fixtures, logs, screenshots, or generated artifacts. Rotate any secret accidentally exposed.
 - `.gitignore` and `.dockerignore` exclude environment files, key/certificate formats, local data, caches, and build artifacts.
 

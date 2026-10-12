@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://matchpulse.ai/schemas/match-event.v1.schema.json",
+  "title": "MatchPulse Synthetic Match Event v1",
+  "description": "Strict event envelope for explicitly synthetic MatchPulse simulator output.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id", "schema_version", "match_id", "simulation_run_id", "sequence",
+    "clock", "type", "team_id", "player_id", "location", "outcome",
+    "causal_event_ids", "data", "provenance"
+  ],
+  "properties": {
+    "event_id": {"type": "string", "pattern": "^[a-f0-9]{32}:[1-9][0-9]*$"},
+    "schema_version": {"const": 1},
+    "match_id": {"type": "string", "minLength": 1},
+    "simulation_run_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+    "sequence": {"type": "integer", "minimum": 1},
+    "clock": {"$ref": "#/$defs/clock"},
+    "type": {
+      "enum": [
+        "match_start", "pass", "shot", "goal", "tackle", "ball_recovery",
+        "possession_change", "pressure", "foul", "half_time", "second_half_start", "full_time"
+      ]
+    },
+    "team_id": {"type": ["string", "null"], "minLength": 1},
+    "player_id": {"type": ["string", "null"], "minLength": 1},
+    "location": {"oneOf": [{"$ref": "#/$defs/location"}, {"type": "null"}]},
+    "outcome": {
+      "type": ["string", "null"],
+      "enum": [
+        "started", "completed", "incomplete", "intercepted", "out_of_play",
+        "goal", "saved", "blocked", "off_target", "woodwork", "scored",
+        "won", "unsuccessful", "controlled", "gained_control", "dead_ball",
+        "restart", "applied", "forced_error", "bypassed", "whistled", "advantage",
+        "half_time", "full_time", null
+      ]
+    },
+    "causal_event_ids": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "data": {"type": "object"},
+    "provenance": {"$ref": "#/$defs/provenance"}
+  },
+  "allOf": [
+    {"if": {"properties": {"type": {"const": "match_start"}}, "required": ["type"]}, "then": {"properties": {"team_id": {"type": "null"}, "player_id": {"type": "null"}, "location": {"type": "null"}, "outcome": {"const": "started"}, "data": {"$ref": "#/$defs/match_start"}}}},
+    {"if": {"properties": {"type": {"const": "pass"}}, "required": ["type"]}, "then": {"properties": {"team_id": {"type": "string", "minLength": 1}, "player_id": {"type": "string", "minLength": 1}, "location": {"$ref": "#/$defs/location"}, "outcome": {"enum": ["completed", "incomplete", "intercepted", "out_of_play"]}, "data": {"$ref": "#/$defs/pass"}}}},
+    {"if": {"properties": {"type": {"const": "shot"}}, "required": ["type"]}, "then": {"properties": {"team_id": {"type": "string", "minLength": 1}, "player_id": {"type": "string", "minLength": 1}, "location": {"$ref": "#/$defs/location"}, "outcome": {"enum": ["goal", "saved", "blocked", "off_target", "woodwork"]}, "data": {"$ref": "#/$defs/shot"}}}},
+    {"if": {"properties": {"type": {"const": "goal"}}, "required": ["type"]}, "then": {"properties": {"team_id": {"type": "string", "minLength": 1}, "player_id": {"type": "string", "minLength": 1}, "location": {"type": "null"}, "outcome": {"const": "scored"}, "data": {"$ref": "#/$defs/goal"}}}},
+    {"if": {"properties": {"type": {"const": "tackle"}}, "required": ["type"]}, "then": {"properties": {"team_id": {"type": "string", "minLength": 1}, "player_id": {"type": "string", "minLength": 1}, "location": {"$ref": "#/$defs/location"}, "outcome": {"enum": ["won", "unsuccessful"]}, "data": {"$ref": "#/$defs/tackle"}}}},
+    {"if": {"properties": {"type": {"const": "ball_recovery"}}, "required": ["type"]}, "then": {"properties": {"team_id": {"type": "string", "minLength": 1}, "player_id": {"type": "string", "minLength": 1}, "location": {"$ref": "#/$defs/location"}, "outcome": {"const": "controlled"}, "data": {"$ref": "#/$defs/ball_recovery"}}}},
+    {"if": {"properties": {"type": {"const": "possession_change"}}, "required": ["type"]}, "then": {"properties": {"player_id": {"type": "null"}, "location": {"type": "null"}, "outcome": {"enum": ["gained_control", "dead_ball", "restart"]}, "data": {"$ref": "#/$defs/possession_change"}}}},
+    {"if": {"properties": {"type": {"const": "pressure"}}, "required": ["type"]}, "then": {"properties": {"team_id": {"type": "string", "minLength": 1}, "location": {"$ref": "#/$defs/location"}, "outcome": {"enum": ["applied", "forced_error", "bypassed"]}, "data": {"$ref": "#/$defs/pressure"}}}},
+    {"if": {"properties": {"type": {"const": "foul"}}, "required": ["type"]}, "then": {"properties": {"team_id": {"type": "string", "minLength": 1}, "player_id": {"type": "string", "minLength": 1}, "outcome": {"enum": ["whistled", "advantage"]}, "data": {"$ref": "#/$defs/foul"}}}},
+    {"if": {"properties": {"type": {"const": "half_time"}}, "required": ["type"]}, "then": {"properties": {"team_id": {"type": "null"}, "player_id": {"type": "null"}, "location": {"type": "null"}, "outcome": {"const": "half_time"}, "data": {"$ref": "#/$defs/empty"}}}},
+    {"if": {"properties": {"type": {"const": "second_half_start"}}, "required": ["type"]}, "then": {"properties": {"team_id": {"type": "null"}, "player_id": {"type": "null"}, "location": {"type": "null"}, "outcome": {"const": "started"}, "data": {"$ref": "#/$defs/empty"}}}},
+    {"if": {"properties": {"type": {"const": "full_time"}}, "required": ["type"]}, "then": {"properties": {"team_id": {"type": "null"}, "player_id": {"type": "null"}, "location": {"type": "null"}, "outcome": {"const": "full_time"}, "data": {"$ref": "#/$defs/empty"}}}}
+  ],
+  "$defs": {
+    "clock": {
+      "type": "object", "additionalProperties": false,
+      "required": ["match_elapsed_ms", "period", "period_elapsed_ms"],
+      "properties": {
+        "match_elapsed_ms": {"type": "integer", "minimum": 0},
+        "period": {"enum": ["first_half", "second_half"]},
+        "period_elapsed_ms": {"type": "integer", "minimum": 0}
+      }
+    },
+    "location": {
+      "type": "object", "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {"x": {"type": "integer", "minimum": 0, "maximum": 100}, "y": {"type": "integer", "minimum": 0, "maximum": 100}}
+    },
+    "player": {
+      "type": "object", "additionalProperties": false,
+      "required": ["player_id", "name"],
+      "properties": {"player_id": {"type": "string", "minLength": 1}, "name": {"type": "string", "minLength": 1}}
+    },
+    "team": {
+      "type": "object", "additionalProperties": false,
+      "required": ["team_id", "name", "players"],
+      "properties": {
+        "team_id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "players": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/player"}}
+      }
+    },
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["synthetic", "generator", "generator_version", "scenario_id", "seed"],
+      "properties": {
+        "synthetic": {"const": true},
+        "generator": {"const": "matchpulse-sim"},
+        "generator_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "scenario_id": {"enum": ["balanced", "late_comeback", "sustained_pressure", "low_event_defensive"]},
+        "seed": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}
+      }
+    },
+    "empty": {"type": "object", "additionalProperties": false, "maxProperties": 0},
+    "match_start": {
+      "type": "object", "additionalProperties": false,
+      "required": ["home_team", "away_team", "kickoff_team_id", "first_half_regulation_ms", "first_half_stoppage_ms", "second_half_regulation_ms", "second_half_stoppage_ms"],
+      "properties": {
+        "home_team": {"$ref": "#/$defs/team"}, "away_team": {"$ref": "#/$defs/team"},
+        "kickoff_team_id": {"type": "string", "minLength": 1},
+        "first_half_regulation_ms": {"type": "integer", "minimum": 1},
+        "first_half_stoppage_ms": {"type": "integer", "minimum": 0, "maximum": 600000},
+        "second_half_regulation_ms": {"type": "integer", "minimum": 1},
+        "second_half_stoppage_ms": {"type": "integer", "minimum": 0, "maximum": 600000}
+      }
+    },
+    "pass": {
+      "type": "object", "additionalProperties": false,
+      "required": ["receiver_player_id", "end_location"],
+      "properties": {"receiver_player_id": {"type": ["string", "null"], "minLength": 1}, "end_location": {"oneOf": [{"$ref": "#/$defs/location"}, {"type": "null"}]}}
+    },
+    "shot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["shot_subtype", "target_location", "rebound_available"],
+      "properties": {"shot_subtype": {"enum": ["open_play", "header", "volley"]}, "target_location": {"oneOf": [{"$ref": "#/$defs/location"}, {"type": "null"}]}, "rebound_available": {"type": "boolean"}}
+    },
+    "goal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_shot_event_id", "scoring_team_id", "scorer_player_id"],
+      "properties": {"source_shot_event_id": {"type": "string", "minLength": 1}, "scoring_team_id": {"type": "string", "minLength": 1}, "scorer_player_id": {"type": "string", "minLength": 1}}
+    },
+    "tackle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["opponent_player_id"],
+      "properties": {"opponent_player_id": {"type": ["string", "null"], "minLength": 1}}
+    },
+    "ball_recovery": {
+      "type": "object", "additionalProperties": false,
+      "required": ["recovery_kind"],
+      "properties": {"recovery_kind": {"enum": ["loose_ball", "interception", "second_ball"]}}
+    },
+    "possession_change": {
+      "type": "object", "additionalProperties": false,
+      "required": ["from_team_id", "to_team_id", "reason", "cause_event_id"],
+      "properties": {
+        "from_team_id": {"type": ["string", "null"], "minLength": 1},
+        "to_team_id": {"type": ["string", "null"], "minLength": 1},
+        "reason": {"enum": ["kickoff", "pass", "tackle", "shot", "foul", "goal_restart", "recovery", "period_boundary"]},
+        "cause_event_id": {"type": ["string", "null"], "minLength": 1}
+      }
+    },
+    "pressure": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target_player_id"],
+      "properties": {"target_player_id": {"type": ["string", "null"], "minLength": 1}}
+    },
+    "foul": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fouled_team_id", "fouled_player_id", "awarded_team_id"],
+      "properties": {
+        "fouled_team_id": {"type": "string", "minLength": 1},
+        "fouled_player_id": {"type": ["string", "null"], "minLength": 1},
+        "awarded_team_id": {"type": ["string", "null"], "minLength": 1}
+      }
+    }
+  }
+}

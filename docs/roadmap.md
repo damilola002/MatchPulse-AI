@@ -1,6 +1,6 @@
 # Phased roadmap
 
-Each phase requires explicit approval before implementation. Acceptance criteria below define the proposed exit bar; phase scope and criteria may be refined through an approved review. No phase after Phase 0 is implemented by the current setup.
+Each phase requires explicit approval before implementation. Acceptance criteria below define the proposed exit bar; phase scope and criteria may be refined through an approved review. Phase 0 and Phase 1 are implemented; Phases 2–8 remain unimplemented and require approval.
 
 ## Phase 0 — Repository and architecture
 
@@ -12,11 +12,13 @@ Each phase requires explicit approval before implementation. Acceptance criteria
 
 ## Phase 1 — Synthetic event generator
 
+**Status: Implemented; awaiting final read-only review.**
+
 - **Objective:** Produce reproducible synthetic football event streams.
-- **Scope:** Define simulation inputs, seeded generation, versioned event schema, and provenance metadata.
-- **Deliverables:** Generator, versioned JSON Schema, deterministic fixtures, generator-focused tests, usage documentation.
-- **Exclusions:** Persistence, live ingestion, AI narratives, UI, and real-match feeds.
-- **Acceptance:** Same approved seed/config yields identical ordered events; outputs validate against schema; run and synthetic provenance are explicit; generator tests pass.
+- **Scope:** Immutable validated match configuration; fictional fixtures; isolated SplitMix64 seeded generation; v1 event schema and provenance; four defined scenarios; pure lifecycle/possession/score/shot replay; canonical JSONL and JSON-array serialization; offline CLI.
+- **Deliverables:** Python package, packaged versioned JSON Schema, deterministic fixture/scenario definitions, replay reducer, pytest suite, pinned `jsonschema` runtime dependency, and usage documentation.
+- **Exclusions:** Persistence, live ingestion, APIs, AI narratives, UI, real-match feeds, streaming, and downstream analytics.
+- **Acceptance:** Same seed/config/generator version yields byte-identical canonical output; IDs and order are stable; all events validate; replay enforces lifecycle, references, goal linkage, and possession transitions; scenario constraints and serialization round trips pass automated tests.
 
 ## Phase 2 — Event ingestion and live match state
 

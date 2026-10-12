@@ -4,17 +4,17 @@ MatchPulse AI is an independent project for the Microsoft × Premier League Synt
 
 ## Status
 
-Phase 0 establishes repository guidance, architecture, preliminary contracts, roadmap, and local PostgreSQL environment scaffolding. Application components are planned and are not implemented.
+Phase 0 established repository guidance and PostgreSQL-only local environment scaffolding. Phase 1 implements an offline, deterministic synthetic event generator, schema v1, canonical JSON/JSONL serialization, and pure match replay. Ingestion, persistence, analytics, AI, delivery, and presentation remain planned.
 
 ## Planned pipeline
 
-Synthetic Event Generator → Ingestion → Match State → Statistics → Insight Detection → Narrative Generation → Live Delivery → Personalized Presentation.
+**Implemented:** Synthetic Event Generator → pure Match State replay. **Planned:** ingestion, persistent match state, statistics, insight detection, narrative generation, live delivery, and personalized presentation.
 
-See [the blueprint](docs/blueprint.md), [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), and [preliminary data contracts](docs/data-contracts.md).
+See [the blueprint](docs/blueprint.md), [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), and [data contracts](docs/data-contracts.md).
 
 ## Initial development baselines
 
-Python 3.12, Node.js 22 LTS, React, TypeScript, Vite, FastAPI, PostgreSQL, SQLAlchemy, Alembic, Server-Sent Events, Docker Compose, and Azure-hosted AI behind a provider abstraction. Version baselines are subject to compatibility verification before implementation; dependency versions have not yet been installed or locked.
+Python 3.12, Node.js 22 LTS, React, TypeScript, Vite, FastAPI, PostgreSQL, SQLAlchemy, Alembic, Server-Sent Events, Docker Compose, and Azure-hosted AI behind a provider abstraction. Phase 1 pins `jsonschema==4.26.0` and the development extra pins `pytest==9.1.1`; other component dependencies remain undecided.
 
 ## Local environment
 

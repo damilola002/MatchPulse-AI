@@ -8,14 +8,15 @@ Build an explainable real-time synthetic football match intelligence platform fo
 
 `Synthetic Event Generator → Ingestion → Match State → Statistics → Insight Detection → Narrative Generation → Live Delivery → Personalized Presentation`
 
-Every arrow represents a future explicit component contract. Event identity, validation, replay, and evidence provenance must flow through the pipeline. Narrative generation may explain approved evidence but does not establish match facts. Delivery and presentation preserve synthetic-data labeling.
+The Phase 1 generator and local pure replay reducer are implemented. Ingestion onward remains future work. Event identity, validation, replay, and evidence provenance must flow through the pipeline. Narrative generation may explain approved evidence but does not establish match facts. Delivery and presentation preserve synthetic-data labeling.
 
 ## Component status
 
-| Component | Status after Phase 0 | Planned responsibility |
+| Component | Status after Phase 1 | Responsibility |
 |---|---|---|
 | Repository and architecture | Implemented in Phase 0 | Guidance, architecture, contracts design, roadmap, local DB scaffolding |
-| Synthetic event generator | Planned | Reproducible event streams and simulation provenance |
+| Synthetic event generator | Implemented in Phase 1 | Deterministic fictional fixtures, seeded event streams, versioned schema, JSON/JSONL serialization |
+| Pure local replay | Implemented in Phase 1 | Validate lifecycle and references; derive final score, possession, period, status, and shot counts |
 | Ingestion and match state | Planned | Validate, deduplicate, order, replay, and project events |
 | Statistics and insight detection | Planned | Deterministic metrics and explainable evidence-linked insights |
 | Narrative generation | Planned | Provider-abstracted Azure AI narratives grounded in evidence |
@@ -24,7 +25,7 @@ Every arrow represents a future explicit component contract. Event identity, val
 | Recaps and multilingual narratives | Planned | Evidence-grounded post-match summaries and translations |
 | Azure deployment | Planned | Secure deployable application and demonstration environment |
 
-No application code, API, schema migrations, UI, model integration, or event generator is implemented in Phase 0.
+No API, database models/migrations, UI, model integration, network service, or persistent ingestion is implemented. The Phase 1 generator is an offline Python package and does not read real match data.
 
 ## Product principles
 

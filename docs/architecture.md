@@ -2,7 +2,11 @@
 
 ## Status and baselines
 
-This document describes a planned architecture. Phase 0 implements repository documentation and PostgreSQL-only Compose scaffolding; every product component below is planned, not implemented. Initial development baselines are Python 3.12 and Node.js 22 LTS with React, TypeScript, Vite, FastAPI, PostgreSQL, SQLAlchemy, Alembic, Server-Sent Events, Docker Compose, and Azure-hosted AI behind a provider abstraction. These baselines are subject to compatibility verification before implementation. Exact package versions, Azure model, region, and deployment topology remain undecided.
+The end-to-end product remains planned, with the Phase 1 offline generator and pure replay reducer implemented. Initial baselines are Python 3.12 and Node.js 22 LTS with React, TypeScript, Vite, FastAPI, PostgreSQL, SQLAlchemy, Alembic, Server-Sent Events, Docker Compose, and Azure-hosted AI behind a provider abstraction. Generator package dependencies are pinned in `pyproject.toml`; other components' exact versions, Azure model, region, and deployment topology remain undecided.
+
+## Current implementation boundary
+
+The `src/matchpulse_sim` Python package generates entirely fictional events from immutable configuration and fictional team/player fixtures. It uses a local SplitMix64 PRNG, derives stable run/event identities, validates every event against the packaged JSON Schema v1, and emits canonical JSON or JSONL. A pure reducer validates complete streams and derives lifecycle state, score, current possession, and shot counts. This code has no network, database, web, Azure, or frontend integration. Everything after generation/replay in the pipeline below remains planned.
 
 ## Logical pipeline
 
@@ -27,12 +31,12 @@ Personalized Presentation
           └── broadcaster overlays
 ```
 
-The generator provides a seed/run identity so a simulation can be reproduced. Ingestion validates schema version and match scope, assigns deterministic ordering, and handles duplicate delivery idempotently. Match State maintains a replayable projection. Statistics derive from that state. Insight Detection applies deterministic, documented rules and stores evidence references. Narrative Generation receives structured evidence and output constraints through a provider adapter. Live Delivery exposes updates over SSE. Personalized Presentation chooses the approved audience representation without changing underlying facts.
+The implemented generator provides a seed/run identity so a simulation can be reproduced, and the local reducer replays a full stream. Future ingestion will validate schema version and match scope, assign deterministic ordering, and handle duplicate delivery idempotently. Persistent Match State will maintain a replayable projection. Statistics will derive from that state. Insight Detection will apply deterministic, documented rules and store evidence references. Narrative Generation will receive structured evidence and output constraints through a provider adapter. Live Delivery will expose updates over SSE. Personalized Presentation will choose the approved audience representation without changing underlying facts.
 
 ## Planned boundaries
 
-- **Domain and event contracts:** versioned JSON Schema for synthetic events; schema evolution is explicit and validated.
-- **Backend:** FastAPI owns API endpoints, ingestion coordination, match projections, statistics, insights, narratives, and SSE. FastAPI OpenAPI exposes API contracts.
+- **Domain and event contracts:** synthetic event JSON Schema v1 is implemented and packaged; unsupported versions and unknown fields are rejected. API contracts will be exposed through future FastAPI OpenAPI.
+- **Backend (planned):** FastAPI will own API endpoints, ingestion coordination, persisted match projections, statistics, insights, narratives, and SSE. FastAPI OpenAPI will expose API contracts.
 - **Persistence:** PostgreSQL stores runs, match data, event history, projections, insights, and narrative records. SQLAlchemy provides data access; Alembic will manage later approved schema changes.
 - **Frontend:** React + TypeScript + Vite consumes backend APIs and SSE; it renders dashboards and overlays, with synthetic labeling always visible.
 - **AI provider:** application-owned abstraction accepts bounded evidence and returns structured candidate narrative output. Azure-hosted AI is one provider; validation and evidence association stay in application code.
@@ -55,7 +59,7 @@ The PostgreSQL container continues to listen on port `5432` internally. The host
 
 The event is the durable evidence record. Every processed event has stable identity and a match-scoped timestamp/order. Replays use the same deterministic ordering and event identity; duplicate events must not double-apply. Derived state can be rebuilt from accepted events. Statistics and insights retain references to source event identifiers (or an explicitly described evidence set). Narratives retain the insight/evidence identifiers and model/provider metadata needed for audit, subject to privacy/security review.
 
-SSE messages use a stable delivery identifier and sequence so clients can resume from the last accepted event. Reconnection semantics, retention bounds, and reset behavior require final approval in the relevant implementation phase. See [preliminary data contracts](data-contracts.md).
+SSE messages will use a stable delivery identifier and sequence so clients can resume from the last accepted event. There is no SSE implementation yet; reconnection semantics, retention bounds, and reset behavior require final approval in the relevant implementation phase. See [data contracts](data-contracts.md).
 
 ## Operational qualities
 

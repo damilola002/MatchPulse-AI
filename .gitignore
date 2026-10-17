@@ -14,6 +14,7 @@ __pycache__/
 *.egg-info/
 build/
 .venv/
+.venv-phase2/
 venv/
 .pytest_cache/
 .mypy_cache/

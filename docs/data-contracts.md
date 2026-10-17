@@ -1,6 +1,6 @@
-# Data contracts — Phase 1 event contract implemented; later contracts preliminary
+# Data contracts — Phase 1 event contract and Phase 2 ingestion implemented pending review
 
-The synthetic event contract v1 is implemented at `src/matchpulse_sim/schemas/match-event.v1.schema.json`. The descriptions of database entities, APIs, insights, narratives, and SSE below remain preliminary design only and require approval before implementation. API contracts will be exposed through FastAPI OpenAPI. Synthetic event contracts use immutable, versioned JSON Schema. Phase 1 creates no SQL tables, migrations, endpoints, or persistent storage.
+The synthetic event contract v1 is implemented at `src/matchpulse_sim/schemas/match-event.v1.schema.json`. Phase 2 implements match/event tables, ingestion APIs, and SSE. API contracts are exposed through FastAPI OpenAPI. Synthetic event contracts use immutable, versioned JSON Schema. Phase 2 adds migration source but does not execute it automatically.
 
 ## Planned entities
 
@@ -27,18 +27,22 @@ The event taxonomy is `match_start`, `pass`, `shot`, `goal`, `tackle`, `ball_rec
 
 The generator uses fictional fixtures and labels every event synthetic. Stable identities and a versioned local PRNG policy are compatibility behavior. Canonical UTF-8 compact sorted-key JSONL is the stream format; JSON arrays are supported for import/export, preserving null fields, IDs, order, and schema versions.
 
-## Preliminary event requirements for future ingestion
+## Phase 2 ingestion and state semantics
 
-- **Idempotent processing:** Re-delivery of an event ID with identical content must not apply it twice. Same ID with conflicting content must be rejected and surfaced.
-- **Persisted replay:** Future ingestion and persistence must preserve v1 deterministic ordering and reducer behavior, while defining storage/application semantics.
+- **Idempotent processing:** Re-delivery of an event ID with canonically identical content is a no-op. A conflicting duplicate or sequence gap returns a conflict. A batch may contain an identical duplicate prefix followed by contiguous new events; duplicates after new events are rejected. Batches are atomic and locked by match.
+- **State version:** Projection version increments once per successful transaction that adds new events; duplicate-only retries do not increment it. Accepted and finalized sequence watermarks are separate.
+- **Stable state:** The incremental reducer accepts valid incomplete prefixes but holds provisional goal/possession transitions pending. Public projection and SSE expose finalized state/events only.
+- **Body bounds:** API raw JSON body is limited to 1 MiB and each event batch to 100. Bounds are checked before full JSON parsing and in service validation.
+- **Event-page bounds:** A page contains at most 100 events and at most 1 MiB of compact serialized JSON. `next_after_sequence` advances only through returned events. If one event alone cannot fit, the API returns `413 event_exceeds_page_budget`, identifies its sequence, and leaves the cursor unchanged; clients must surface the error rather than retry or skip that event.
+- **Persisted replay:** PostgreSQL is the authoritative append-only event log. On restart the service can verify projection against replayed rows; automatic rebuild/repair is not implemented.
 - **Schema versioning:** v1 rejection is implemented. Compatibility, translation, and future versions require a reviewed immutable schema artifact and explicit policy.
 - **Insight-to-evidence traceability:** Every insight records its rule/version and the event IDs or evidence set that caused it, including relevant window boundaries. Evidence must be retrievable and stable.
 - **Narrative grounding:** Narratives reference their input insight/evidence identifiers and audience/language. Validate claims or structured claims against supplied evidence; do not accept model output as new match fact. Store provider/model and validation outcome under an approved retention policy.
 - **Synthetic provenance:** Synthetic match data carries an unambiguous synthetic marker and simulation run reference at appropriate record and API boundaries. Preserve labeling in exports and all user-facing outputs.
 
-## SSE delivery requirements
+## SSE delivery behavior
 
-SSE updates should have a stable, monotonically ordered delivery identifier scoped to the stream/match, use SSE `id` for client resume, and include an event type plus versioned data. Clients reconnect with `Last-Event-ID`; the server replays subsequent retained messages when possible. Retention expiry, unknown IDs, stream reset/snapshot recovery, duplicate handling, and authorization behavior need approval before Phase 5. Delivery IDs and domain event IDs are related but distinct concepts.
+SSE uses Phase 1 event IDs in `id` and sequence as a monotonic cursor scoped to the match/run. `Last-Event-ID` must identify a stored finalized event for that match; subsequent committed finalized events are replayed in order. At-least-once delivery can occur around reconnects, so clients deduplicate by ID. The server polls in bounded pages, heartbeats, caps concurrent connections, and ends after full-time. Retention reset/snapshot and authentication are not implemented.
 
 ## PRNG compatibility policy
 

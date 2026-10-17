@@ -2,7 +2,7 @@
 
 ## Baselines
 
-Initial development baselines: Python 3.12 and Node.js 22 LTS. Planned frontend uses React, TypeScript, and Vite; planned backend uses FastAPI; PostgreSQL is the planned database with SQLAlchemy and Alembic. Phase 1 requires Python 3.12+ and pins `jsonschema==4.26.0`; its development extra pins `pytest==9.1.1`. Other component dependencies and lockfiles belong to their approved implementation phases.
+Initial development baselines: Python 3.12 and Node.js 22 LTS. The React, TypeScript, and Vite frontend remains planned. Phase 2 adds FastAPI, SQLAlchemy, Alembic, psycopg, Uvicorn, Pydantic, and HTTPX with pinned versions in `pyproject.toml`; verify versions against the selected interpreter before installation.
 
 ## Phase workflow
 
@@ -19,7 +19,37 @@ Do not skip phases or implement future functionality. Read `AGENTS.md` and the r
 
 For a later authorized local run, copy `.env.example` to `.env` and set the blank `POSTGRES_PASSWORD` to a unique local value. Compose exposes PostgreSQL on `127.0.0.1:5434` by default, persists data in a named volume, and waits for the health check. Never commit `.env`. Phase 0 does not start services or create database tables.
 
-The reserved MatchPulse AI development ports are PostgreSQL `5434`, FastAPI `8001` (future phase), and Vite `5174` (future phase). Phase 0 defines no backend or frontend services.
+Development ports: PostgreSQL `5434`, FastAPI `8001`, and Vite `5174` (future frontend phase). These are local defaults, not a guarantee of availability. The API binds to `127.0.0.1` and CORS allows only `http://localhost:5174`; the React frontend does not exist in Phase 2.
+
+## Phase 2 API and playback
+
+Create an untracked `.env` from `.env.example` and set a non-empty local `POSTGRES_PASSWORD`. Before running the API or Alembic from a shell, export those settings with `set -a; . ./.env; set +a`. The API uses `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_HOST_PORT` to connect to PostgreSQL at `127.0.0.1`.
+
+PostgreSQL integration tests require both `MATCHPULSE_TEST_DATABASE_URL` and `MATCHPULSE_TEST_DATABASE_NAME`. The URL database must exactly match the explicitly designated name, use loopback, and differ from the normalized development host/port/database target. A `_test` suffix is an additional check, not the sole isolation guard. The tests create and drop only a unique temporary schema within that dedicated test database. Never point the test URL at the development database.
+
+Alembic requires `MATCHPULSE_MIGRATION_TARGET=development` or `MATCHPULSE_MIGRATION_TARGET=test`; there is no implicit default. Test migrations additionally require `MATCHPULSE_TEST_MIGRATION_CONFIRM` to equal the designated test database name. Before an approved migration, verify the connected database name, server address, and port. Test migrations use the explicit test URL; development migrations continue to use the `POSTGRES_*` configuration. Neither selection runs automatically. Never put database passwords in command arguments or logs.
+
+The event-page endpoint returns at most 100 events and at most 1 MiB of compact serialized JSON. If the first event after a cursor cannot fit, it returns a non-retryable `413 event_exceeds_page_budget` with the blocking sequence; the cursor is not advanced and the event is not skipped. Clients must surface the error rather than retrying the same page indefinitely.
+
+Install package/test dependencies in the isolated virtual environment described above. After PostgreSQL is running and its credentials are configured:
+
+```sh
+.venv/bin/python -m matchpulse_sim serve --host 127.0.0.1 --port 8001
+```
+
+The server does not run migrations automatically. Migration commands such as `.venv/bin/alembic upgrade head` alter database structure and require explicit approval for the target database. Do not run them against development without separate authorization.
+
+Ingest through `POST /api/matches` with `{"start_event": <match_start event>}`, then submit ordered batches of up to 100 events to `POST /api/matches/{match_id}/events`. Raw request bodies are limited to 1 MiB. Query stable state at `/state`, accepted events at `/events?after_sequence=0&limit=100`, and subscribe to finalized committed events at `/stream`; reconnect with the most recent SSE `Last-Event-ID`.
+
+Feed a reproducible generated stream, or a previously exported complete JSON/JSONL file, with:
+
+```sh
+.venv/bin/python -m matchpulse_sim play --scenario balanced --seed 42 --speed 10
+.venv/bin/python -m matchpulse_sim play --input /tmp/matchpulse-match.jsonl --speed 10
+.venv/bin/python -m matchpulse_sim play --input /tmp/matchpulse-match.jsonl --resume --speed 10
+```
+
+Playback uses simulation-clock deltas, preserves event IDs and contents, retries uncertain requests idempotently, and can be interrupted with Ctrl-C. Resume checks match, run, accepted sequence, and event identity before sending the remaining suffix. The initial incremental reducer and ingestion path replay the accepted prefix for each addition, so processing cost grows with match history; this implementation is intended for the small synthetic matches used in local demonstrations. Phase 2 has no browser controls, authentication, production deployment, stream retention/reset protocol, or automatic projection repair.
 
 ## Planned validation approach
 

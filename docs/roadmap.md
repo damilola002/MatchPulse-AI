@@ -1,6 +1,6 @@
 # Phased roadmap
 
-Each phase requires explicit approval before implementation. Acceptance criteria below define the proposed exit bar; phase scope and criteria may be refined through an approved review. Phase 0 and Phase 1 are implemented; Phases 2–8 remain unimplemented and require approval.
+Each phase requires explicit approval before implementation. Acceptance criteria below define the proposed exit bar; phase scope and criteria may be refined through an approved review. Phases 0 and 1 are implemented. Phase 2 is implemented and verified locally, awaiting commit; Phases 3–8 remain unimplemented and require approval.
 
 ## Phase 0 — Repository and architecture
 
@@ -12,7 +12,7 @@ Each phase requires explicit approval before implementation. Acceptance criteria
 
 ## Phase 1 — Synthetic event generator
 
-**Status: Implemented; awaiting final read-only review.**
+**Status: Implemented, reviewed, and committed.**
 
 - **Objective:** Produce reproducible synthetic football event streams.
 - **Scope:** Immutable validated match configuration; fictional fixtures; isolated SplitMix64 seeded generation; v1 event schema and provenance; four defined scenarios; pure lifecycle/possession/score/shot replay; canonical JSONL and JSON-array serialization; offline CLI.
@@ -22,11 +22,15 @@ Each phase requires explicit approval before implementation. Acceptance criteria
 
 ## Phase 2 — Event ingestion and live match state
 
+**Status: Implemented and verified locally; awaiting commit.**
+
+Implemented capabilities include FastAPI match/event ingestion, PostgreSQL persistence, incremental reducer and replay, finalized-event SSE, and the playback CLI. Alembic upgrade/downgrade/upgrade verification succeeded against the isolated test database. The full regression suite passed 64 tests, including 2 PostgreSQL integration tests.
+
 - **Objective:** Accept synthetic events and maintain replayable match state.
 - **Scope:** FastAPI ingestion boundary, validation, idempotency, ordering, PostgreSQL persistence, state projection, and controlled replay.
-- **Deliverables:** API contract, SQLAlchemy entities and approved Alembic migrations, ingestion service, projection logic, integration tests.
+- **Deliverables:** OpenAPI contract, SQLAlchemy entities and Alembic migration source, atomic ingestion service, incremental reducer, SSE endpoint, playback CLI, tests and usage documentation.
 - **Exclusions:** Advanced insight rules, AI narrative generation, and dashboard features.
-- **Acceptance:** Valid events persist once; malformed or unsupported versions are rejected clearly; replay reconstructs equivalent state; ordering is deterministic; integration tests pass.
+- **Acceptance:** Identical event retries are no-ops; conflicting duplicates, gaps, and invalid transitions are rejected atomically; accepted/finalized watermarks keep provisional state hidden; one simulation run is associated with a match; restart replay verifies projection/log consistency; SSE reconnects in order and closes at full-time; playback resumes only after identity checks; isolated PostgreSQL concurrency/integration tests pass.
 
 ## Phase 3 — Statistics and explainable insight detection
 

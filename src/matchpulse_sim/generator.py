@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 from typing import Any
 
-from .models import MatchConfig, Period, Scenario
+from .models import Attack, MatchConfig, Period, SCENARIO_SCHEDULES, Scenario
 from .random_source import SeededRandom
 from .serialization import canonical_json
 from .validation import validate_event
@@ -15,60 +14,7 @@ GENERATOR_VERSION = "1.0.0"
 SCHEMA_VERSION = 1
 
 
-@dataclass(frozen=True, slots=True)
-class Attack:
-    period: Period
-    minute: int
-    team_slot: int
-    shot_outcome: str
-    goal: bool = False
-    foul: bool = False
-    recovery: bool = False
-
-
-_SCENARIOS: dict[Scenario, tuple[Attack, ...]] = {
-    Scenario.BALANCED: (
-        Attack(Period.FIRST_HALF, 4, 0, "saved"),
-        Attack(Period.FIRST_HALF, 12, 1, "off_target"),
-        Attack(Period.FIRST_HALF, 20, 0, "goal", goal=True),
-        Attack(Period.FIRST_HALF, 31, 1, "blocked", foul=True, recovery=True),
-        Attack(Period.FIRST_HALF, 41, 0, "woodwork"),
-        Attack(Period.SECOND_HALF, 5, 1, "saved"),
-        Attack(Period.SECOND_HALF, 15, 0, "off_target"),
-        Attack(Period.SECOND_HALF, 25, 1, "goal", goal=True),
-        Attack(Period.SECOND_HALF, 35, 0, "saved", recovery=True),
-        Attack(Period.SECOND_HALF, 43, 1, "blocked"),
-    ),
-    Scenario.LATE_COMEBACK: (
-        Attack(Period.FIRST_HALF, 8, 0, "goal", goal=True),
-        Attack(Period.FIRST_HALF, 22, 1, "goal", goal=True),
-        Attack(Period.FIRST_HALF, 39, 0, "off_target", foul=True),
-        Attack(Period.SECOND_HALF, 9, 0, "saved"),
-        Attack(Period.SECOND_HALF, 20, 1, "off_target"),
-        Attack(Period.SECOND_HALF, 29, 0, "goal", goal=True),
-        Attack(Period.SECOND_HALF, 39, 1, "goal", goal=True),
-        Attack(Period.SECOND_HALF, 44, 1, "goal", goal=True),
-    ),
-    Scenario.SUSTAINED_PRESSURE: (
-        Attack(Period.FIRST_HALF, 8, 1, "saved"),
-        Attack(Period.FIRST_HALF, 25, 0, "goal", goal=True),
-        Attack(Period.FIRST_HALF, 28, 0, "saved"),
-        Attack(Period.FIRST_HALF, 31, 0, "blocked"),
-        Attack(Period.FIRST_HALF, 34, 0, "saved", recovery=True),
-        Attack(Period.FIRST_HALF, 38, 0, "off_target"),
-        Attack(Period.SECOND_HALF, 8, 0, "saved"),
-        Attack(Period.SECOND_HALF, 11, 0, "saved"),
-        Attack(Period.SECOND_HALF, 14, 1, "off_target"),
-        Attack(Period.SECOND_HALF, 16, 0, "blocked"),
-        Attack(Period.SECOND_HALF, 19, 0, "off_target"),
-        Attack(Period.SECOND_HALF, 23, 1, "saved"),
-    ),
-    Scenario.LOW_EVENT: (
-        Attack(Period.FIRST_HALF, 27, 0, "off_target", foul=True),
-        Attack(Period.FIRST_HALF, 41, 1, "saved"),
-        Attack(Period.SECOND_HALF, 20, 0, "blocked", recovery=True),
-    ),
-}
+_SCENARIOS = SCENARIO_SCHEDULES
 
 
 def simulation_run_id(config: MatchConfig) -> str:

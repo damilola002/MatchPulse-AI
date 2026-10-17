@@ -45,7 +45,41 @@ class MatchState:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class ReplayProgress:
+    """Stable projection plus accepted-prefix and pending-transition metadata."""
+
+    state: MatchState
+    accepted_sequence: int
+    accepted_event_id: str
+    accepted_match_elapsed_ms: int
+    finalized_sequence: int
+    finalized_period_elapsed_ms: int
+    pending_transition: dict[str, Any] | None
+    complete: bool
+
+
 def replay_events(events: Iterable[dict[str, Any]]) -> MatchState:
+    """Validate a complete event stream and return its final state."""
+    progress = replay_prefix(events)
+    if progress.pending_transition is not None:
+        if progress.pending_transition.get("goal_event_id"):
+            raise ReplayError("goal-outcome shot has no matching goal event")
+        raise ReplayError("event stream ends before required possession transition")
+    if not progress.complete:
+        raise ReplayError("event stream must end with full_time")
+    if progress.state.current_possession is not None:
+        raise ReplayError("full-time state must have no current possession")
+    return progress.state
+
+
+def replay_prefix(events: Iterable[dict[str, Any]]) -> ReplayProgress:
+    """Reduce a valid prefix; retain the last stable state if a transition is pending.
+
+    This is the shared event-by-event state machine used by both live ingestion and
+    complete replay. The input may stop after a cause event while awaiting its
+    required continuation; that provisional state is represented only by metadata.
+    """
     stream = list(events)
     if not stream:
         raise ReplayError("event stream must not be empty")
@@ -69,10 +103,35 @@ def replay_events(events: Iterable[dict[str, Any]]) -> MatchState:
     first_duration = second_duration = 0
     home_team_id = away_team_id = ""
     team_players: dict[str, set[str]] = {}
+    finalized_sequence = 0
+    stable_state: MatchState | None = None
     match_id = stream[0].get("match_id", "")
     run_id = stream[0].get("simulation_run_id", "")
     scenario_id = stream[0]["provenance"]["scenario_id"]
     seed = stream[0]["provenance"]["seed"]
+
+    def snapshot(sequence: int, *, state_status: str | None = None) -> MatchState:
+        return MatchState(
+            match_id=match_id,
+            simulation_run_id=run_id,
+            status=state_status or status,
+            period=period,
+            home_team_id=home_team_id,
+            away_team_id=away_team_id,
+            home_score=home_score,
+            away_score=away_score,
+            current_possession=possession,
+            home_shots=home_shots,
+            away_shots=away_shots,
+            last_sequence=sequence,
+            last_match_elapsed_ms=max(last_clock, 0),
+        )
+
+    def finalize_if_stable(sequence: int) -> None:
+        nonlocal finalized_sequence, stable_state
+        if pending_goal is None and pending_change is None:
+            finalized_sequence = sequence
+            stable_state = snapshot(sequence)
 
     for expected_sequence, event in enumerate(stream, start=1):
         try:
@@ -134,6 +193,7 @@ def replay_events(events: Iterable[dict[str, Any]]) -> MatchState:
                 raise ReplayError("player IDs must be unique across teams")
             if data["kickoff_team_id"] != home_team_id:
                 raise ReplayError("the home team must take first-half kickoff in v1")
+            stable_state = snapshot(0, state_status="scheduled")
             first_duration = data["first_half_regulation_ms"] + data["first_half_stoppage_ms"]
             second_duration = data["second_half_regulation_ms"] + data["second_half_stoppage_ms"]
             if data["first_half_stoppage_ms"] > MAX_STOPPAGE_MS or data["second_half_stoppage_ms"] > MAX_STOPPAGE_MS:
@@ -173,6 +233,7 @@ def replay_events(events: Iterable[dict[str, Any]]) -> MatchState:
                 pending_change = None
                 known_ids[event["event_id"]] = event
                 last_clock = elapsed
+                finalize_if_stable(expected_sequence)
                 continue
 
             if pending_change is not None:
@@ -204,6 +265,7 @@ def replay_events(events: Iterable[dict[str, Any]]) -> MatchState:
                     period = "second_half"
                 known_ids[event["event_id"]] = event
                 last_clock = elapsed
+                finalize_if_stable(expected_sequence)
                 continue
 
             if status != "live":
@@ -302,29 +364,55 @@ def replay_events(events: Iterable[dict[str, Any]]) -> MatchState:
         known_ids[event["event_id"]] = event
         last_clock = elapsed
 
-    if pending_goal is not None:
-        raise ReplayError("goal-outcome shot has no matching goal event")
-    if pending_change is not None:
-        raise ReplayError("event stream ends before required possession transition")
-    for shot in shot_by_id.values():
-        if shot["outcome"] == "goal" and shot["event_id"] not in seen_goal_sources:
-            raise ReplayError("every goal-outcome shot requires exactly one goal event")
-    if status != "ended":
-        raise ReplayError("event stream must end with full_time")
-    if possession is not None:
-        raise ReplayError("full-time state must have no current possession")
-    return MatchState(
-        match_id=match_id,
-        simulation_run_id=run_id,
-        status=status,
-        period=period,
-        home_team_id=home_team_id,
-        away_team_id=away_team_id,
-        home_score=home_score,
-        away_score=away_score,
-        current_possession=possession,
-        home_shots=home_shots,
-        away_shots=away_shots,
-        last_sequence=len(stream),
-        last_match_elapsed_ms=last_clock,
+        finalize_if_stable(expected_sequence)
+
+    if status == "ended" and pending_goal is None and pending_change is None:
+        for shot in shot_by_id.values():
+            if shot["outcome"] == "goal" and shot["event_id"] not in seen_goal_sources:
+                raise ReplayError("every goal-outcome shot requires exactly one goal event")
+    pending: dict[str, Any] | None = None
+    if pending_goal is not None or pending_change is not None:
+        pending = {
+            "goal_event_id": pending_goal["event_id"] if pending_goal else None,
+            "required_possession_change": pending_change,
+        }
+    if stable_state is None:
+        raise ReplayError("could not establish an initial stable match projection")
+    return ReplayProgress(
+        state=stable_state,
+        accepted_sequence=len(stream),
+        accepted_event_id=stream[-1]["event_id"],
+        accepted_match_elapsed_ms=stream[-1]["clock"]["match_elapsed_ms"],
+        finalized_sequence=finalized_sequence,
+        finalized_period_elapsed_ms=(
+            stream[finalized_sequence - 1]["clock"]["period_elapsed_ms"]
+            if finalized_sequence
+            else 0
+        ),
+        pending_transition=pending,
+        complete=status == "ended" and pending is None and possession is None,
     )
+
+
+class IncrementalReducer:
+    """Event-by-event facade over the same replay state machine.
+
+    The current Phase 1 scenarios are small, so the initial implementation
+    revalidates the accepted prefix on each append. This intentionally favors
+    one source of domain rules over a second, subtly divergent reducer.
+    """
+
+    def __init__(self, accepted_prefix: Iterable[dict[str, Any]] = ()) -> None:
+        self._events = list(accepted_prefix)
+        self._progress = replay_prefix(self._events) if self._events else None
+
+    @property
+    def progress(self) -> ReplayProgress | None:
+        return self._progress
+
+    def accept(self, event: dict[str, Any]) -> ReplayProgress:
+        candidate = [*self._events, event]
+        progress = replay_prefix(candidate)
+        self._events.append(event)
+        self._progress = progress
+        return progress

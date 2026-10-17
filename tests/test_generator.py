@@ -9,7 +9,16 @@ import pytest
 from matchpulse_sim import serialization
 from matchpulse_sim.cli import main as cli_main
 from matchpulse_sim.generator import GENERATOR_VERSION, generate_events
-from matchpulse_sim.models import MatchConfig, Scenario, TeamFixture, PlayerFixture, default_fixtures
+from matchpulse_sim.models import (
+    MatchConfig,
+    Period,
+    SCENARIO_MIN_PERIOD_DURATION_MS,
+    SCENARIO_SCHEDULES,
+    Scenario,
+    TeamFixture,
+    PlayerFixture,
+    default_fixtures,
+)
 from matchpulse_sim.replay import ReplayError, replay_events
 from matchpulse_sim.serialization import read_event_input_file, read_json, read_jsonl, write_json, write_jsonl
 from matchpulse_sim.validation import EventValidationError, event_schema, validate_event
@@ -52,6 +61,19 @@ def test_generator_v1_golden_canonical_jsonl_digest():
     canonical_bytes = write_jsonl(generate_events(config)).encode("utf-8")
     assert GENERATOR_VERSION == "1.0.0"
     assert hashlib.sha256(canonical_bytes).hexdigest() == "71567e757f54037ef84bc58ef35ab65af4f04c1d77ac3b54c24c388f94df7bce"
+
+
+def test_scenario_minimums_are_derived_from_immutable_generation_schedule():
+    for scenario, attacks in SCENARIO_SCHEDULES.items():
+        expected = tuple(
+            max((attack.minute for attack in attacks if attack.period is period), default=0) * 60_000
+            for period in (Period.FIRST_HALF, Period.SECOND_HALF)
+        )
+        assert SCENARIO_MIN_PERIOD_DURATION_MS[scenario] == expected
+    with pytest.raises(TypeError):
+        SCENARIO_SCHEDULES[Scenario.BALANCED] = ()
+    with pytest.raises(TypeError):
+        SCENARIO_MIN_PERIOD_DURATION_MS[Scenario.BALANCED] = (0, 0)
 
 
 def test_different_seeds_produce_different_valid_sequences(config_factory):

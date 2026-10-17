@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 import re
+from types import MappingProxyType
 
 IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 MINUTE_MS = 60_000
@@ -23,15 +24,70 @@ class Period(StrEnum):
     SECOND_HALF = "second_half"
 
 
-SCENARIO_MIN_PERIOD_DURATION_MS: dict[Scenario, tuple[int, int]] = {
-    # Minimum total period-clock duration (regulation + stoppage) needed to
-    # contain every scripted attack in each scenario. Boundary lifecycle events
-    # occur at the configured duration and may share the final event timestamp.
-    Scenario.BALANCED: (41 * MINUTE_MS, 43 * MINUTE_MS),
-    Scenario.LATE_COMEBACK: (39 * MINUTE_MS, 44 * MINUTE_MS),
-    Scenario.SUSTAINED_PRESSURE: (38 * MINUTE_MS, 23 * MINUTE_MS),
-    Scenario.LOW_EVENT: (41 * MINUTE_MS, 20 * MINUTE_MS),
-}
+@dataclass(frozen=True, slots=True)
+class Attack:
+    period: Period
+    minute: int
+    team_slot: int
+    shot_outcome: str
+    goal: bool = False
+    foul: bool = False
+    recovery: bool = False
+
+
+# The immutable schedule is the source of truth for generation and duration validation.
+SCENARIO_SCHEDULES = MappingProxyType({
+    Scenario.BALANCED: (
+        Attack(Period.FIRST_HALF, 4, 0, "saved"),
+        Attack(Period.FIRST_HALF, 12, 1, "off_target"),
+        Attack(Period.FIRST_HALF, 20, 0, "goal", goal=True),
+        Attack(Period.FIRST_HALF, 31, 1, "blocked", foul=True, recovery=True),
+        Attack(Period.FIRST_HALF, 41, 0, "woodwork"),
+        Attack(Period.SECOND_HALF, 5, 1, "saved"),
+        Attack(Period.SECOND_HALF, 15, 0, "off_target"),
+        Attack(Period.SECOND_HALF, 25, 1, "goal", goal=True),
+        Attack(Period.SECOND_HALF, 35, 0, "saved", recovery=True),
+        Attack(Period.SECOND_HALF, 43, 1, "blocked"),
+    ),
+    Scenario.LATE_COMEBACK: (
+        Attack(Period.FIRST_HALF, 8, 0, "goal", goal=True),
+        Attack(Period.FIRST_HALF, 22, 1, "goal", goal=True),
+        Attack(Period.FIRST_HALF, 39, 0, "off_target", foul=True),
+        Attack(Period.SECOND_HALF, 9, 0, "saved"),
+        Attack(Period.SECOND_HALF, 20, 1, "off_target"),
+        Attack(Period.SECOND_HALF, 29, 0, "goal", goal=True),
+        Attack(Period.SECOND_HALF, 39, 1, "goal", goal=True),
+        Attack(Period.SECOND_HALF, 44, 1, "goal", goal=True),
+    ),
+    Scenario.SUSTAINED_PRESSURE: (
+        Attack(Period.FIRST_HALF, 8, 1, "saved"),
+        Attack(Period.FIRST_HALF, 25, 0, "goal", goal=True),
+        Attack(Period.FIRST_HALF, 28, 0, "saved"),
+        Attack(Period.FIRST_HALF, 31, 0, "blocked"),
+        Attack(Period.FIRST_HALF, 34, 0, "saved", recovery=True),
+        Attack(Period.FIRST_HALF, 38, 0, "off_target"),
+        Attack(Period.SECOND_HALF, 8, 0, "saved"),
+        Attack(Period.SECOND_HALF, 11, 0, "saved"),
+        Attack(Period.SECOND_HALF, 14, 1, "off_target"),
+        Attack(Period.SECOND_HALF, 16, 0, "blocked"),
+        Attack(Period.SECOND_HALF, 19, 0, "off_target"),
+        Attack(Period.SECOND_HALF, 23, 1, "saved"),
+    ),
+    Scenario.LOW_EVENT: (
+        Attack(Period.FIRST_HALF, 27, 0, "off_target", foul=True),
+        Attack(Period.FIRST_HALF, 41, 1, "saved"),
+        Attack(Period.SECOND_HALF, 20, 0, "blocked", recovery=True),
+    ),
+})
+
+
+SCENARIO_MIN_PERIOD_DURATION_MS = MappingProxyType({
+    scenario: tuple(
+        max((attack.minute for attack in attacks if attack.period is period), default=0) * MINUTE_MS
+        for period in (Period.FIRST_HALF, Period.SECOND_HALF)
+    )
+    for scenario, attacks in SCENARIO_SCHEDULES.items()
+})
 
 
 @dataclass(frozen=True, slots=True)

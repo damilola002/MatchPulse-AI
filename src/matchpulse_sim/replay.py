@@ -80,6 +80,28 @@ def replay_prefix(events: Iterable[dict[str, Any]]) -> ReplayProgress:
     complete replay. The input may stop after a cause event while awaiting its
     required continuation; that provisional state is represented only by metadata.
     """
+    return _replay_prefix(events, stable_history=None)
+
+
+def replay_prefix_with_history(
+    events: Iterable[dict[str, Any]],
+) -> tuple[ReplayProgress, tuple[tuple[int, MatchState], ...]]:
+    """Reduce a prefix and return stable states at their finalized sequence.
+
+    This is an additive view of the same reducer, used when consumers need
+    evidence-backed transitions without implementing a second state machine.
+    Pending states are never included in the history.
+    """
+    history: list[tuple[int, MatchState]] = []
+    progress = _replay_prefix(events, stable_history=history)
+    return progress, tuple(history)
+
+
+def _replay_prefix(
+    events: Iterable[dict[str, Any]],
+    *,
+    stable_history: list[tuple[int, MatchState]] | None,
+) -> ReplayProgress:
     stream = list(events)
     if not stream:
         raise ReplayError("event stream must not be empty")
@@ -132,6 +154,8 @@ def replay_prefix(events: Iterable[dict[str, Any]]) -> ReplayProgress:
         if pending_goal is None and pending_change is None:
             finalized_sequence = sequence
             stable_state = snapshot(sequence)
+            if stable_history is not None:
+                stable_history.append((sequence, stable_state))
 
     for expected_sequence, event in enumerate(stream, start=1):
         try:
@@ -194,6 +218,8 @@ def replay_prefix(events: Iterable[dict[str, Any]]) -> ReplayProgress:
             if data["kickoff_team_id"] != home_team_id:
                 raise ReplayError("the home team must take first-half kickoff in v1")
             stable_state = snapshot(0, state_status="scheduled")
+            if stable_history is not None:
+                stable_history.append((0, stable_state))
             first_duration = data["first_half_regulation_ms"] + data["first_half_stoppage_ms"]
             second_duration = data["second_half_regulation_ms"] + data["second_half_stoppage_ms"]
             if data["first_half_stoppage_ms"] > MAX_STOPPAGE_MS or data["second_half_stoppage_ms"] > MAX_STOPPAGE_MS:

@@ -9,6 +9,7 @@
 - PostgreSQL integration tests require `MATCHPULSE_TEST_DATABASE_URL` and an explicit `MATCHPULSE_TEST_DATABASE_NAME`. The normalized host, port, and database name must differ from the development target; a `_test` suffix alone is not sufficient. Tests clean up only their uniquely created schema.
 - Alembic requires explicit `MATCHPULSE_MIGRATION_TARGET=development` or `test`. Test migrations also require a matching `MATCHPULSE_TEST_MIGRATION_CONFIRM` value and verify the connected database target before executing. The application does not run migrations automatically. Database passwords must not be logged.
 - Event-page responses are capped at 1 MiB and 100 events. An event that cannot fit as the first page item returns a non-retryable 413 with the blocking cursor position instead of being skipped.
+- The Phase 3 intelligence API requires `MATCHPULSE_INTELLIGENCE_CURSOR_KEY` from untracked local/runtime configuration. Supply an unpadded base64url encoding of at least 32 random bytes and keep it stable while cursors are valid. The endpoint fails closed when it is missing or invalid; never log or commit the key. Rotation invalidates existing cursors.
 - Do not place secrets in source, docs, examples, test fixtures, logs, screenshots, or generated artifacts. Rotate any secret accidentally exposed.
 - `.gitignore` and `.dockerignore` exclude environment files, key/certificate formats, local data, caches, and build artifacts.
 

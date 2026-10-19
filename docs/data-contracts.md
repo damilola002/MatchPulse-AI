@@ -1,6 +1,6 @@
-# Data contracts — Phase 1 event contract and Phase 2 ingestion implemented pending review
+# Data contracts — Phase 1 event v1, Phase 2 ingestion, and Phase 3 intelligence
 
-The synthetic event contract v1 is implemented at `src/matchpulse_sim/schemas/match-event.v1.schema.json`. Phase 2 implements match/event tables, ingestion APIs, and SSE. API contracts are exposed through FastAPI OpenAPI. Synthetic event contracts use immutable, versioned JSON Schema. Phase 2 adds migration source but does not execute it automatically.
+The synthetic event contract v1 is implemented at `src/matchpulse_sim/schemas/match-event.v1.schema.json`. Phase 2 match/event tables, ingestion APIs, migrations, replay, and SSE are implemented. API contracts are exposed through FastAPI OpenAPI. Synthetic event contracts use immutable, versioned JSON Schema. Phase 2 migrations are applied only through explicit commands and target safeguards. Phase 3 implementation and local test verification complete; awaiting final review, commit, and push. The reported full-suite result is 82 passed, 0 failed, and 55 warnings. Phase 3 adds no persistence and does not change Phase 2 SSE. See [the Phase 3 intelligence contract](phase3-intelligence-contract.md).
 
 ## Planned entities
 
@@ -39,6 +39,10 @@ The generator uses fictional fixtures and labels every event synthetic. Stable i
 - **Insight-to-evidence traceability:** Every insight records its rule/version and the event IDs or evidence set that caused it, including relevant window boundaries. Evidence must be retrievable and stable.
 - **Narrative grounding:** Narratives reference their input insight/evidence identifiers and audience/language. Validate claims or structured claims against supplied evidence; do not accept model output as new match fact. Store provider/model and validation outcome under an approved retention policy.
 - **Synthetic provenance:** Synthetic match data carries an unambiguous synthetic marker and simulation run reference at appropriate record and API boundaries. Preserve labeling in exports and all user-facing outputs.
+
+## Phase 3 intelligence contracts (implemented locally; local test verification complete; awaiting final review, commit, and push)
+
+Phase 3 defines `MetricSnapshot v1` and `Insight v1`, five event-derived team metrics, and three deterministic rules. All output is computed on demand from the finalized event prefix only, identified by the Phase 2 finalized sequence/event ID, and labeled synthetic. Goals-per-shot is null for zero shots; otherwise it is a four-place decimal string rounded using decimal round-half-to-even. Insights carry exact ordered evidence IDs and stable rule versions/identities. Activity windows are inclusive rolling 600,000 ms within one half, ordered by sequence; episode rearming occurs on every finalized match-clock advance. The read-only API uses HMAC-protected cursors pinned to a specific finalized watermark and bounded to 100 insights/1 MiB per page, 10,000 input events/16 MiB per calculation. There are no intelligence tables and no intelligence SSE; Phase 2 event SSE remains unchanged. Full fields, cursor checks, bounds, and consistency rules are in [phase3-intelligence-contract.md](phase3-intelligence-contract.md). No Phase 1 event schema or Phase 2 response contract changed.
 
 ## SSE delivery behavior
 

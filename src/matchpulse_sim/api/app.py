@@ -10,7 +10,7 @@ from fastapi import Depends, FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
-from sqlalchemy import Engine, select
+from sqlalchemy import Engine, select, text
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 from starlette.concurrency import run_in_threadpool
@@ -22,6 +22,7 @@ from .models import MatchEventRecord, MatchRecord
 from .schemas import (
     EventBatchRequest,
     EventPageResponse,
+    IntelligenceResponse,
     IngestResponse,
     MatchStateResponse,
     StartMatchRequest,
@@ -34,6 +35,7 @@ from .service import (
     replay_stored_events,
     start_match,
 )
+from ..intelligence.api import get_intelligence_page
 
 MAX_REQUEST_BODY_BYTES = 1024 * 1024
 MAX_SSE_CONNECTIONS = 100
@@ -229,6 +231,23 @@ def create_app(engine: Engine | None = None) -> FastAPI:
         session: Session = Depends(db),
     ) -> dict[str, Any]:
         return get_event_page(session, match_id, after_sequence, limit)
+
+    @app.get(
+        "/api/matches/{match_id}/intelligence",
+        response_model=IntelligenceResponse,
+    )
+    def intelligence_endpoint(
+        match_id: str,
+        limit: int | None = Query(default=None, ge=1, le=100),
+        cursor: str | None = Query(default=None),
+        session: Session = Depends(db),
+    ) -> dict[str, Any]:
+        # This is a read-only transaction. The finalized watermark and its
+        # immutable event prefix are captured together without locking writers.
+        with session.begin():
+            if session.get_bind().dialect.name == "postgresql":
+                session.execute(text("SET TRANSACTION READ ONLY"))
+            return get_intelligence_page(session, match_id, limit=limit, cursor=cursor)
 
     @app.get("/api/matches/{match_id}/stream")
     async def stream_endpoint(match_id: str, request: Request) -> StreamingResponse:

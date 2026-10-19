@@ -4,11 +4,11 @@ MatchPulse AI is an independent project for the Microsoft × Premier League Synt
 
 ## Status
 
-Phases 0 and 1 established repository guidance, local PostgreSQL scaffolding, a deterministic synthetic event generator, schema v1, canonical JSON/JSONL serialization, and pure match replay. Phase 2 adds local FastAPI event ingestion, PostgreSQL-backed event history and stable match state, finalized-event SSE, and a playback CLI. Phase 2 is awaiting final review; analytics, AI, frontend, and deployment remain planned.
+Phases 0–2 are complete, reviewed, committed, and pushed. Phase 1 provides deterministic synthetic event generation and replay. Phase 2 provides local FastAPI ingestion, PostgreSQL event history and stable match state, finalized-event SSE, and playback. Phase 3 implementation and local test verification complete; awaiting final review, commit, and push. The reported full-suite result is 82 passed, 0 failed, and 55 warnings. See the [Phase 3 intelligence contract](docs/phase3-intelligence-contract.md). AI narratives, frontend, personalization, recaps, and deployment remain planned.
 
 ## Planned pipeline
 
-**Implemented:** Synthetic Event Generator → Ingestion → Match State → finalized SSE delivery. **Planned:** statistics, insight detection, narrative generation, and personalized presentation.
+**Implemented locally:** Synthetic Event Generator → Ingestion → Match State → finalized SSE delivery → deterministic statistics and insight detection. Phase 3 implementation and local test verification complete; awaiting final review, commit, and push. **Planned:** narrative generation and personalized presentation.
 
 See [the blueprint](docs/blueprint.md), [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), and [data contracts](docs/data-contracts.md).
 

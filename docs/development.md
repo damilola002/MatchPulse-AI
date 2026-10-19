@@ -31,6 +31,12 @@ Alembic requires `MATCHPULSE_MIGRATION_TARGET=development` or `MATCHPULSE_MIGRAT
 
 The event-page endpoint returns at most 100 events and at most 1 MiB of compact serialized JSON. If the first event after a cursor cannot fit, it returns a non-retryable `413 event_exceeds_page_budget` with the blocking sequence; the cursor is not advanced and the event is not skipped. Clients must surface the error rather than retrying the same page indefinitely.
 
+## Phase 3 intelligence API
+
+With the Phase 3 API running, query `GET /api/matches/{match_id}/intelligence?limit=100`. The response includes `metric_snapshot`, an ordered `insights` page, the pinned `as_of` finalized watermark, and an optional `next_cursor`. Continue pagination with `?cursor=<opaque-value>`; do not reuse a cursor with a different match or change its page size. The endpoint computes from finalized events only, is bounded to 10,000 events/16 MiB per calculation and 100 insights/1 MiB per response, and does not add intelligence SSE or database tables.
+
+Before using the endpoint, set `MATCHPULSE_INTELLIGENCE_CURSOR_KEY` in the untracked `.env` to an unpadded base64url encoding of at least 32 random bytes. Keep it stable while cursors are in use; changing it invalidates existing cursors. The API fails closed when the key is missing or malformed. Never place the key in source control, command examples, logs, or issue reports. After sourcing `.env` as described above, the API process inherits the setting.
+
 Install package/test dependencies in the isolated virtual environment described above. After PostgreSQL is running and its credentials are configured:
 
 ```sh

@@ -1,6 +1,6 @@
 # Phased roadmap
 
-Each phase requires explicit approval before implementation. Acceptance criteria below define the proposed exit bar; phase scope and criteria may be refined through an approved review. Phases 0 and 1 are implemented. Phase 2 is implemented and verified locally, awaiting commit; Phases 3–8 remain unimplemented and require approval.
+Each phase requires explicit approval before implementation. Acceptance criteria below define the proposed exit bar; phase scope and criteria may be refined through an approved review. Phases 0–2 are implemented, reviewed, committed, and pushed. Phase 3 implementation and local test verification complete; awaiting final review, commit, and push. Phases 4–8 remain unimplemented and require approval.
 
 ## Phase 0 — Repository and architecture
 
@@ -22,7 +22,7 @@ Each phase requires explicit approval before implementation. Acceptance criteria
 
 ## Phase 2 — Event ingestion and live match state
 
-**Status: Implemented and verified locally; awaiting commit.**
+**Status: Implemented, reviewed, committed, and pushed.**
 
 Implemented capabilities include FastAPI match/event ingestion, PostgreSQL persistence, incremental reducer and replay, finalized-event SSE, and the playback CLI. Alembic upgrade/downgrade/upgrade verification succeeded against the isolated test database. The full regression suite passed 64 tests, including 2 PostgreSQL integration tests.
 
@@ -34,11 +34,17 @@ Implemented capabilities include FastAPI match/event ingestion, PostgreSQL persi
 
 ## Phase 3 — Statistics and explainable insight detection
 
+**Status: Phase 3 implementation and local test verification complete; awaiting final review, commit, and push.**
+
+The reported full-suite result is 82 passed, 0 failed, and 55 warnings.
+
 - **Objective:** Derive useful match statistics and explainable developments from state/evidence.
-- **Scope:** Deterministic metric definitions, rule-based insight detection, evidence linkage, thresholds, and domain tests.
-- **Deliverables:** Metric/rule documentation, implementation, evidence references, tests and representative examples.
+- **Scope:** Deterministic metrics for goals, shots, shot outcomes, logged pressure events, and goals per shot; exactly three explainable rules (`score_change`, `shot_activity`, `pressure_activity`); finalized-only evidence; deterministic window/episode semantics; domain tests.
+- **Deliverables:** Phase 3 contract documentation, metric/rule implementation, evidence-linked outputs, tests and representative synthetic examples.
 - **Exclusions:** AI-written narratives, audience-specific presentation, and speculative claims.
-- **Acceptance:** Identical state yields identical metrics/insights; each insight has rule/version and evidence references; claims can be checked against source events; tests cover boundaries.
+- **Acceptance:** Identical finalized prefix yields identical metrics/insights and stable IDs; pending events are excluded; each insight has a rule/version and exact evidence references; claims are checkable against source events; tests cover metric, window, threshold, episode and replay boundaries.
+
+See [the Phase 3 intelligence contract](phase3-intelligence-contract.md) for finalized v1 data, rule, pagination, computation, and API contracts. Local test verification is reported complete; final review, commit, and push remain pending.
 
 ## Phase 4 — Azure AI narrative generation
 

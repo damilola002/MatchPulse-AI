@@ -1,6 +1,6 @@
-# Data contracts — Phase 1 event v1, Phase 2 ingestion, and Phase 3 intelligence
+# Data contracts — Phase 1 event v1, Phase 2 ingestion, Phase 3 intelligence, and Phase 4 narratives
 
-The synthetic event contract v1 is implemented at `src/matchpulse_sim/schemas/match-event.v1.schema.json`. Phase 2 match/event tables, ingestion APIs, migrations, replay, and SSE are implemented. API contracts are exposed through FastAPI OpenAPI. Synthetic event contracts use immutable, versioned JSON Schema. Phase 2 migrations are applied only through explicit commands and target safeguards. Phase 3 implementation and local test verification complete; awaiting final review, commit, and push. The reported full-suite result is 82 passed, 0 failed, and 55 warnings. Phase 3 adds no persistence and does not change Phase 2 SSE. See [the Phase 3 intelligence contract](phase3-intelligence-contract.md).
+The synthetic event contract v1 is implemented at `src/matchpulse_sim/schemas/match-event.v1.schema.json`. Phases 2–3 match/event tables, ingestion APIs, migrations, replay, SSE, statistics, and intelligence API are implemented, reviewed, committed, and pushed. API contracts are exposed through FastAPI OpenAPI. Synthetic event contracts use immutable, versioned JSON Schema. Phase 2 migrations are applied only through explicit commands and target safeguards. Phase 3 adds no persistence and does not change Phase 2 SSE. Phase 4 narratives are implemented locally, are not persisted, and do not change earlier public contracts. See [the Phase 3 intelligence contract](phase3-intelligence-contract.md) and [Phase 4 narrative contract](phase4-narrative-contract.md).
 
 ## Planned entities
 
@@ -40,9 +40,19 @@ The generator uses fictional fixtures and labels every event synthetic. Stable i
 - **Narrative grounding:** Narratives reference their input insight/evidence identifiers and audience/language. Validate claims or structured claims against supplied evidence; do not accept model output as new match fact. Store provider/model and validation outcome under an approved retention policy.
 - **Synthetic provenance:** Synthetic match data carries an unambiguous synthetic marker and simulation run reference at appropriate record and API boundaries. Preserve labeling in exports and all user-facing outputs.
 
-## Phase 3 intelligence contracts (implemented locally; local test verification complete; awaiting final review, commit, and push)
+## Phase 3 intelligence contracts (implemented, committed, and pushed)
 
 Phase 3 defines `MetricSnapshot v1` and `Insight v1`, five event-derived team metrics, and three deterministic rules. All output is computed on demand from the finalized event prefix only, identified by the Phase 2 finalized sequence/event ID, and labeled synthetic. Goals-per-shot is null for zero shots; otherwise it is a four-place decimal string rounded using decimal round-half-to-even. Insights carry exact ordered evidence IDs and stable rule versions/identities. Activity windows are inclusive rolling 600,000 ms within one half, ordered by sequence; episode rearming occurs on every finalized match-clock advance. The read-only API uses HMAC-protected cursors pinned to a specific finalized watermark and bounded to 100 insights/1 MiB per page, 10,000 input events/16 MiB per calculation. There are no intelligence tables and no intelligence SSE; Phase 2 event SSE remains unchanged. Full fields, cursor checks, bounds, and consistency rules are in [phase3-intelligence-contract.md](phase3-intelligence-contract.md). No Phase 1 event schema or Phase 2 response contract changed.
+
+## Phase 4 narrative contracts (implemented locally; awaiting review)
+
+`NarrativeRequestV1` and `NarrativeResponseV1` are defined in `src/matchpulse_sim/narrative/contracts.py`. A request carries match/run identity, synthetic provenance, the exact current finalized watermark, and bounded `ApprovedClaimV1` records derived from Phase 3 insights. Claim IDs are stable hashes of their versioned fact/evidence identity. Preparation resolves each evidence event against the Phase 2 finalized prefix and rejects stale snapshots, unknown insights, or cross-match/run evidence. The provider returns only claim IDs plus exact text selected from application-owned neutral English templates; the application rejects arbitrary provider prose and assembles blocks with exact claim, insight, and event references. The service is on demand: no narrative persistence, no SSE, and no Phase 1–3 contract changes.
+
+The approved demo route is `POST /api/matches/{match_id}/narratives`. It requires `MATCHPULSE_DEMO_MODE=true` and loopback host/client addresses. The strict browser request contains only `simulation_run_id`, `as_of`, and 1–10 unique `insight_ids`; clients cannot send claims or evidence. The server recomputes claims and evidence within a read-only transaction. It returns the exact `NarrativeResponseV1`, bounded by the Phase 4 response limit. The deterministic fake provider is the default; Azure requires explicit `MATCHPULSE_NARRATIVE_PROVIDER=azure` and runtime credentials. The unauthenticated route must not be publicly exposed.
+
+## Phase 5 dashboard data consumption
+
+The frontend uses the existing state, event-page, intelligence, and raw-event SSE contracts. Event-page results can include accepted events beyond the finalized watermark; the client displays only `sequence <= last_finalized_sequence`. SSE is finalized-only and retains its original event payload and event ID. The UI deduplicates events by exact event ID and orders them by sequence; it refetches state, pages, and intelligence after stream messages. No new event type or SSE message is introduced.
 
 ## SSE delivery behavior
 

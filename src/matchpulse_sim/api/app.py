@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import json
+import os
 import re
 import time
 from typing import Any, Callable
@@ -16,6 +18,12 @@ from sqlalchemy.orm import Session, sessionmaker
 from starlette.concurrency import run_in_threadpool
 
 from ..serialization import canonical_json
+from ..narrative.azure import AzureOpenAIProvider
+from ..narrative.claims import prepare_narrative_request
+from ..narrative.contracts import NarrativeGenerationRequest, NarrativeResponseV1
+from ..narrative.errors import NarrativeError
+from ..narrative.providers import DeterministicFakeProvider
+from ..narrative.service import NarrativeService
 from .database import ConfigurationError, application_engine, session_factory
 from .errors import ApiProblem, MatchNotFound
 from .models import MatchEventRecord, MatchRecord
@@ -118,6 +126,7 @@ def create_app(engine: Engine | None = None) -> FastAPI:
     app.state.engine = engine
     app.state.sessions = session_factory(engine) if engine is not None else None
     app.state.active_sse = 0
+    app.state.narrative_services = {}
 
     def get_sessions() -> sessionmaker[Session]:
         if app.state.sessions is not None:
@@ -171,6 +180,30 @@ def create_app(engine: Engine | None = None) -> FastAPI:
             {"error": {"code": "configuration_error", "message": "local database configuration is incomplete"}},
             status_code=503,
         )
+
+    @app.exception_handler(NarrativeError)
+    async def narrative_error_handler(_: Request, exc: NarrativeError) -> JSONResponse:
+        status = {
+            "invalid_narrative_request": 422,
+            "empty_insight_selection": 422,
+            "narrative_input_limit": 413,
+            "narrative_output_limit": 502,
+            "unknown_insight": 422,
+            "stale_snapshot": 409,
+            "unfinalized_evidence": 422,
+            "unsupported_claim_reference": 422,
+            "unsupported_factual_assertion": 422,
+            "read_only_transaction_required": 503,
+            "invalid_narrative_configuration": 503,
+            "narrative_provider_not_configured": 503,
+            "provider_timeout": 504,
+            "provider_unavailable": 503,
+            "rate_limited": 503,
+            "authentication_failed": 502,
+            "provider_rejected_request": 502,
+            "invalid_provider_output": 502,
+        }.get(exc.code, 502)
+        return JSONResponse({"error": {"code": exc.code, "message": exc.message}}, status_code=status)
 
     @app.exception_handler(OperationalError)
     async def database_unavailable_handler(_: Request, __: OperationalError) -> JSONResponse:
@@ -248,6 +281,55 @@ def create_app(engine: Engine | None = None) -> FastAPI:
             if session.get_bind().dialect.name == "postgresql":
                 session.execute(text("SET TRANSACTION READ ONLY"))
             return get_intelligence_page(session, match_id, limit=limit, cursor=cursor)
+
+    @app.post(
+        "/api/matches/{match_id}/narratives",
+        response_model=NarrativeResponseV1,
+        tags=["local demo"],
+    )
+    async def narrative_endpoint(
+        match_id: str,
+        body: NarrativeGenerationRequest,
+        request: Request,
+        session: Session = Depends(db),
+    ) -> NarrativeResponseV1:
+        # This local demo route fails closed unless explicitly enabled, and
+        # remains loopback-only even if the server is accidentally rebound.
+        if os.environ.get("MATCHPULSE_DEMO_MODE", "").strip().lower() not in {"1", "true", "yes"}:
+            raise ApiProblem(404, "narrative_demo_disabled", "local narrative demo is disabled")
+        try:
+            peer = ipaddress.ip_address(request.client.host if request.client else "")
+            host = (request.url.hostname or "").lower()
+            host_is_loopback = host == "localhost" or ipaddress.ip_address(host).is_loopback
+        except ValueError:
+            peer = None
+            host_is_loopback = False
+        if peer is None or not peer.is_loopback or not host_is_loopback:
+            raise ApiProblem(403, "narrative_demo_loopback_only", "narrative demo is available only over loopback")
+
+        provider_name = os.environ.get("MATCHPULSE_NARRATIVE_PROVIDER", "fake").strip().lower() or "fake"
+        if provider_name not in {"fake", "azure"}:
+            raise NarrativeError("invalid_narrative_configuration", "narrative provider selection is invalid")
+        service = app.state.narrative_services.get(provider_name)
+        if service is None:
+            provider = DeterministicFakeProvider() if provider_name == "fake" else AzureOpenAIProvider.from_env()
+            service = app.state.narrative_services[provider_name] = NarrativeService(provider)
+
+        def prepare() -> Any:
+            with session.begin():
+                if session.get_bind().dialect.name == "postgresql":
+                    session.execute(text("SET TRANSACTION READ ONLY"))
+                return prepare_narrative_request(
+                    session,
+                    match_id=match_id,
+                    expected_as_of=body.as_of,
+                    insight_ids=body.insight_ids,
+                )
+
+        narrative_request = await run_in_threadpool(prepare)
+        if narrative_request.simulation_run_id != body.simulation_run_id:
+            raise ApiProblem(409, "narrative_match_conflict", "narrative request run does not match the selected match")
+        return await service.generate(narrative_request)
 
     @app.get("/api/matches/{match_id}/stream")
     async def stream_endpoint(match_id: str, request: Request) -> StreamingResponse:

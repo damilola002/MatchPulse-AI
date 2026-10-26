@@ -1,6 +1,6 @@
 # Phased roadmap
 
-Each phase requires explicit approval before implementation. Acceptance criteria below define the proposed exit bar; phase scope and criteria may be refined through an approved review. Phases 0–2 are implemented, reviewed, committed, and pushed. Phase 3 implementation and local test verification complete; awaiting final review, commit, and push. Phases 4–8 remain unimplemented and require approval.
+Each phase requires explicit approval before implementation. Acceptance criteria below define the proposed exit bar; phase scope and criteria may be refined through an approved review. Phases 0–3 are implemented, reviewed, committed, and pushed. Phase 4 and the minimum Phase 5 dashboard are implemented locally and awaiting final review; Phases 6–8 remain planned and unimplemented.
 
 ## Phase 0 — Repository and architecture
 
@@ -34,9 +34,7 @@ Implemented capabilities include FastAPI match/event ingestion, PostgreSQL persi
 
 ## Phase 3 — Statistics and explainable insight detection
 
-**Status: Phase 3 implementation and local test verification complete; awaiting final review, commit, and push.**
-
-The reported full-suite result is 82 passed, 0 failed, and 55 warnings.
+**Status: Implemented, reviewed, committed, and pushed.**
 
 - **Objective:** Derive useful match statistics and explainable developments from state/evidence.
 - **Scope:** Deterministic metrics for goals, shots, shot outcomes, logged pressure events, and goals per shot; exactly three explainable rules (`score_change`, `shot_activity`, `pressure_activity`); finalized-only evidence; deterministic window/episode semantics; domain tests.
@@ -44,17 +42,23 @@ The reported full-suite result is 82 passed, 0 failed, and 55 warnings.
 - **Exclusions:** AI-written narratives, audience-specific presentation, and speculative claims.
 - **Acceptance:** Identical finalized prefix yields identical metrics/insights and stable IDs; pending events are excluded; each insight has a rule/version and exact evidence references; claims are checkable against source events; tests cover metric, window, threshold, episode and replay boundaries.
 
-See [the Phase 3 intelligence contract](phase3-intelligence-contract.md) for finalized v1 data, rule, pagination, computation, and API contracts. Local test verification is reported complete; final review, commit, and push remain pending.
+See [the Phase 3 intelligence contract](phase3-intelligence-contract.md) for finalized v1 data, rule, pagination, computation, and API contracts.
 
 ## Phase 4 — Azure AI narrative generation
 
+**Status: Implemented locally; domain and fake-provider tests pass; awaiting final review.**
+
 - **Objective:** Generate readable narratives grounded in approved evidence.
-- **Scope:** Provider abstraction, Azure-hosted AI adapter, structured prompts/outputs, validation, timeouts, retries, and safe failure behavior.
-- **Deliverables:** Provider interface, configuration strategy, narrative service, grounding/output validation, test doubles, security and cost controls.
+- **Scope:** Provider abstraction, Azure OpenAI-compatible adapter, structured prompts/outputs, validation, timeouts, bounded retries, safe failure behavior, and a local-demo-only narrative POST endpoint gated by explicit configuration. Output is ephemeral and fake-provider default.
+- **Deliverables:** Versioned narrative contracts, provider interface, environment configuration, narrative service, grounding/output validation, deterministic test double, security and cost controls.
 - **Exclusions:** Frontend, personalization policy, recap workflows, and ungrounded free-form match analysis.
 - **Acceptance:** Output claims are constrained to supplied evidence and validated; invalid/provider-failure cases are safely handled; core tests do not require live AI; credentials remain external.
 
 ## Phase 5 — Live dashboard and broadcast overlays
+
+**Status: Minimum dashboard implemented locally; awaiting final review and acceptance verification.**
+
+The local dashboard includes a scoreboard, finalized event timeline, Phase 3 metrics and evidence-linked insights, SSE connection/reconnect handling, synthetic labeling, and explicit fake-provider narrative generation. Scenario, seed, and speed controls produce a copyable existing CLI playback command. The browser does not launch playback or add an ingestion endpoint. Broadcast overlay layout, visual accessibility review, and a full PostgreSQL-backed browser rehearsal remain to be verified.
 
 - **Objective:** Present live match state and developments to users.
 - **Scope:** React/TypeScript/Vite application, SSE consumption, match dashboard, and broadcast graphics/overlay layout.

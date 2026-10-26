@@ -2,7 +2,7 @@
 
 ## Baselines
 
-Initial development baselines: Python 3.12 and Node.js 22 LTS. The React, TypeScript, and Vite frontend remains planned. Phase 2 adds FastAPI, SQLAlchemy, Alembic, psycopg, Uvicorn, Pydantic, and HTTPX with pinned versions in `pyproject.toml`; verify versions against the selected interpreter before installation.
+Initial development baselines: Python 3.12 and Node.js 22 LTS (22.12+ for the current Vite baseline). The frontend uses React, TypeScript, and Vite with exact direct dependency pins and lockfile under `frontend/`; backend versions are pinned in `pyproject.toml`.
 
 ## Phase workflow
 
@@ -19,7 +19,7 @@ Do not skip phases or implement future functionality. Read `AGENTS.md` and the r
 
 For a later authorized local run, copy `.env.example` to `.env` and set the blank `POSTGRES_PASSWORD` to a unique local value. Compose exposes PostgreSQL on `127.0.0.1:5434` by default, persists data in a named volume, and waits for the health check. Never commit `.env`. Phase 0 does not start services or create database tables.
 
-Development ports: PostgreSQL `5434`, FastAPI `8001`, and Vite `5174` (future frontend phase). These are local defaults, not a guarantee of availability. The API binds to `127.0.0.1` and CORS allows only `http://localhost:5174`; the React frontend does not exist in Phase 2.
+Development ports: PostgreSQL `5434`, FastAPI `8001`, and Vite `5174`. These are local defaults, not a guarantee of availability. The API CLI binds to `127.0.0.1` and CORS allows only `http://localhost:5174`.
 
 ## Phase 2 API and playback
 
@@ -37,6 +37,16 @@ With the Phase 3 API running, query `GET /api/matches/{match_id}/intelligence?li
 
 Before using the endpoint, set `MATCHPULSE_INTELLIGENCE_CURSOR_KEY` in the untracked `.env` to an unpadded base64url encoding of at least 32 random bytes. Keep it stable while cursors are in use; changing it invalidates existing cursors. The API fails closed when the key is missing or malformed. Never place the key in source control, command examples, logs, or issue reports. After sourcing `.env` as described above, the API process inherits the setting.
 
+## Phase 4 narrative service
+
+Phase 4 adds an internal on-demand service and an explicitly gated local demo endpoint, not a background worker. The route is disabled by default; enable it only for a loopback demo with `MATCHPULSE_DEMO_MODE=true`. The endpoint calls `prepare_narrative_request(session, match_id=..., expected_as_of=..., insight_ids=...)` inside a read-only transaction using the exact `as_of` marker from the Phase 3 response. The service rejects stale markers and resolves evidence only from the current finalized prefix. It does not persist output or alter match state.
+
+Local fake-provider tests and the dashboard's default provider require no Azure environment values. To explicitly select the Azure adapter for a local demo, set `MATCHPULSE_NARRATIVE_PROVIDER=azure` plus `MATCHPULSE_AZURE_OPENAI_ENDPOINT`, `MATCHPULSE_AZURE_OPENAI_DEPLOYMENT`, and `MATCHPULSE_AZURE_OPENAI_API_KEY` in untracked `.env`, then source it as above; do not put credentials in commands. The adapter calls Azure OpenAI-compatible Chat Completions v1, and the deployment must support strict JSON-schema output. The endpoint never makes an Azure call unless the user explicitly invokes narrative generation and Azure is selected.
+
+Defaults and ceilings: at most 10 insights/20 claims, 256 KiB request, 64 KiB response, 512 output tokens, and 4 concurrent requests per service instance. Each attempt is capped at 15 seconds, with at most one eligible transient retry after 0.25 seconds; total operation time including queueing is at most 31 seconds. Settings can lower these bounds through `.env`; values above the ceilings are rejected. Provider output selects exact application-owned English phrases and claim order; it cannot provide custom prose. See [the Phase 4 narrative contract](phase4-narrative-contract.md).
+
+The local narrative API is enabled only by `MATCHPULSE_DEMO_MODE=true`; the fake provider remains default with `MATCHPULSE_NARRATIVE_PROVIDER=fake`. The browser calls `POST /api/matches/{match_id}/narratives` only after the user presses **Generate Match Narrative**. To explicitly use Azure in a local demo, set `MATCHPULSE_NARRATIVE_PROVIDER=azure` and the three Azure settings in untracked `.env`. This route is unauthenticated, checks loopback access, and must not be exposed publicly.
+
 Install package/test dependencies in the isolated virtual environment described above. After PostgreSQL is running and its credentials are configured:
 
 ```sh
@@ -44,6 +54,29 @@ Install package/test dependencies in the isolated virtual environment described 
 ```
 
 The server does not run migrations automatically. Migration commands such as `.venv/bin/alembic upgrade head` alter database structure and require explicit approval for the target database. Do not run them against development without separate authorization.
+
+### Run the local dashboard
+
+Start the backend as described above. In another terminal, install the locked frontend packages and run Vite:
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+Vite binds to `127.0.0.1:5174` and proxies `/api` to `http://127.0.0.1:8001` (override only with a local `MATCHPULSE_API_PROXY_TARGET` if the backend uses another loopback port). Open the Vite URL, start a match with the existing local playback CLI, then paste the match ID into the dashboard. The Scenario/Seed/Speed controls create a copyable command; the browser does not launch a terminal, create a match, or submit events. Use a fresh CLI match ID for replay/reset.
+
+The dashboard loads accepted event pages but displays only events through the finalized watermark, and it consumes the existing finalized-only SSE stream with exact event-ID deduplication. Narrative requests are explicit POST actions. The browser receives no Azure credentials. Do not bind either service to a non-loopback interface.
+
+Frontend checks (after `npm ci`):
+
+```sh
+cd frontend
+npm test
+npm run typecheck
+npm run build
+```
 
 Ingest through `POST /api/matches` with `{"start_event": <match_start event>}`, then submit ordered batches of up to 100 events to `POST /api/matches/{match_id}/events`. Raw request bodies are limited to 1 MiB. Query stable state at `/state`, accepted events at `/events?after_sequence=0&limit=100`, and subscribe to finalized committed events at `/stream`; reconnect with the most recent SSE `Last-Event-ID`.
 

@@ -4,17 +4,17 @@ MatchPulse AI is an independent project for the Microsoft × Premier League Synt
 
 ## Status
 
-Phases 0–2 are complete, reviewed, committed, and pushed. Phase 1 provides deterministic synthetic event generation and replay. Phase 2 provides local FastAPI ingestion, PostgreSQL event history and stable match state, finalized-event SSE, and playback. Phase 3 implementation and local test verification complete; awaiting final review, commit, and push. The reported full-suite result is 82 passed, 0 failed, and 55 warnings. See the [Phase 3 intelligence contract](docs/phase3-intelligence-contract.md). AI narratives, frontend, personalization, recaps, and deployment remain planned.
+Phases 0–3 are complete, reviewed, committed, and pushed. Phase 1 provides deterministic synthetic event generation and replay. Phase 2 provides local FastAPI ingestion, PostgreSQL event history and stable match state, finalized-event SSE, and playback. Phase 3 provides deterministic statistics and evidence-linked intelligence. Phase 4 narrative generation and the minimum Phase 5 dashboard are implemented locally and awaiting final review. Narratives are explicitly invoked, local-demo gated, and constrained to application-approved wording. Personalization, recaps, and deployment remain planned.
 
 ## Planned pipeline
 
-**Implemented locally:** Synthetic Event Generator → Ingestion → Match State → finalized SSE delivery → deterministic statistics and insight detection. Phase 3 implementation and local test verification complete; awaiting final review, commit, and push. **Planned:** narrative generation and personalized presentation.
+**Implemented:** Synthetic Event Generator → Ingestion → Match State → finalized SSE delivery → deterministic statistics and insight detection. **Implemented locally, awaiting review:** grounded Phase 4 narrative generation and the Phase 5 React dashboard. Playback is launched through the existing local CLI; the browser does not start processes or create an ingestion protocol. **Planned:** personalization, recaps, and deployment.
 
 See [the blueprint](docs/blueprint.md), [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), and [data contracts](docs/data-contracts.md).
 
 ## Initial development baselines
 
-Python 3.12, Node.js 22 LTS, React, TypeScript, Vite, FastAPI, PostgreSQL, SQLAlchemy, Alembic, Server-Sent Events, Docker Compose, and Azure-hosted AI behind a provider abstraction. `pyproject.toml` pins Phase 1 and 2 backend and test dependencies; frontend dependencies are reserved for the frontend phase.
+Python 3.12, Node.js 22 LTS, React, TypeScript, Vite, FastAPI, PostgreSQL, SQLAlchemy, Alembic, Server-Sent Events, Docker Compose, and Azure-hosted AI behind a provider abstraction. `pyproject.toml` pins backend and test dependencies; `frontend/package.json` and its lockfile pin frontend dependencies.
 
 ## Local environment
 

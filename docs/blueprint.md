@@ -8,7 +8,7 @@ Build an explainable real-time synthetic football match intelligence platform fo
 
 `Synthetic Event Generator → Ingestion → Match State → Statistics → Insight Detection → Narrative Generation → Live Delivery → Personalized Presentation`
 
-The Phase 1 generator and pure replay reducer, and Phase 2 ingestion, persistence, finalized-state replay, SSE, and playback are implemented. Phase 3 implementation and local test verification complete; awaiting final review, commit, and push. The reported full-suite result is 82 passed, 0 failed, and 55 warnings. Narrative generation may explain approved evidence but does not establish match facts. Delivery and presentation preserve synthetic-data labeling.
+The Phase 1 generator and pure replay reducer, Phase 2 ingestion, persistence, finalized-state replay, SSE and playback, and Phase 3 statistics and insight detection are complete, committed, and pushed. Phase 4 narrative generation and the minimum Phase 5 dashboard are implemented locally and await final review. Narratives explain only application-approved evidence and do not establish match facts. Delivery and presentation preserve synthetic-data labeling.
 
 ## Component status
 
@@ -18,9 +18,10 @@ The Phase 1 generator and pure replay reducer, and Phase 2 ingestion, persistenc
 | Synthetic event generator | Implemented in Phase 1 | Deterministic fictional fixtures, seeded event streams, versioned schema, JSON/JSONL serialization |
 | Pure local replay | Implemented in Phase 1 | Validate lifecycle and references; derive final score, possession, period, status, and shot counts |
 | Ingestion and match state | Implemented in Phase 2 | Validate, deduplicate, order, replay, persist, and project events |
-| Statistics and insight detection | Phase 3 implementation and local test verification complete; awaiting final review, commit, and push | Deterministic metrics and explainable evidence-linked insights from finalized events |
-| Narrative generation | Planned | Provider-abstracted Azure AI narratives grounded in evidence |
-| Live delivery | Planned | SSE event delivery with stable IDs and reconnect behavior |
+| Statistics and insight detection | Implemented in Phase 3; committed and pushed | Deterministic metrics and explainable evidence-linked insights from finalized events |
+| Narrative generation | Implemented locally in Phase 4; awaiting review | Explicit local-demo POST selects approved application wording; deterministic fake provider is default |
+| Live delivery | Implemented in Phase 2 and consumed locally by Phase 5 | Finalized raw-event SSE with stable IDs and reconnect behavior |
+| Match dashboard | Implemented locally in Phase 5; awaiting review | Scoreboard, finalized timeline, metrics, insights/evidence, and explicit narrative action |
 | Personalized presentation | Planned | Dashboard and broadcast outputs tailored to audience |
 | Recaps and multilingual narratives | Planned | Evidence-grounded post-match summaries and translations |
 | Azure deployment | Planned | Secure deployable application and demonstration environment |

@@ -1,6 +1,6 @@
 # Phase 3 — Deterministic match intelligence contract
 
-**Status:** Phase 3 implementation and local test verification complete; awaiting final review, commit, and push. The reported full-suite result is 82 passed, 0 failed, and 55 warnings.
+**Status:** Implemented, reviewed, committed, and pushed in `82b89a70ed433c65f10230df82978469d8630e96`.
 
 This document formalizes the roadmap's Phase 3 scope: deterministic statistics and explainable, evidence-linked insights from finalized synthetic match events. Phase 3 does not generate AI prose, tailor outputs to audiences, or make claims unsupported by the event log.
 
@@ -244,4 +244,4 @@ Representative example: three finalized home `shot` events at match times 600,00
 
 Phase 3 computes metrics and insights on demand from finalized, append-only Phase 2 events. It introduces no intelligence persistence tables and no intelligence SSE messages. The existing Phase 2 raw-event SSE contract is unchanged. Results can be recalculated deterministically from the pinned prefix; no result cache or materialized intelligence state is part of v1.
 
-The rule IDs and thresholds, metric list, endpoint path, finalized-only requirement, four-place decimal representation, inclusive window/episode behavior, HMAC-protected snapshot cursor, and bounded input/page budgets are implemented. Phase 3 adds no intelligence table, migration, event-schema change, or Phase 2 response change. Local test verification is reported complete; final review, commit, and push remain pending.
+The rule IDs and thresholds, metric list, endpoint path, finalized-only requirement, four-place decimal representation, inclusive window/episode behavior, HMAC-protected snapshot cursor, and bounded input/page budgets are implemented. Phase 3 adds no intelligence table, migration, event-schema change, or Phase 2 response change. Phase 3 is complete, committed, and pushed; Phase 4 consumes its versioned intelligence records without changing them.

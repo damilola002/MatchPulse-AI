@@ -65,7 +65,7 @@ def _validate_row(row: MatchEventRecord, payload: Any, sequence: int, match: Mat
     return payload
 
 
-def _read_finalized_prefix(
+def read_finalized_prefix(
     session: Session, match: MatchRecord, sequence: int, event_id: str | None
 ) -> list[dict[str, Any]]:
     if sequence == 0:
@@ -228,7 +228,7 @@ def get_intelligence_page(
                 raise _cursor_failure("intelligence_cursor_conflict", 409, "intelligence cursor watermark is invalid")
             raise ApiProblem(500, "event_log_mismatch", "finalized watermark does not match the stored event")
 
-    events = _read_finalized_prefix(session, match, sequence, event_id)
+    events = read_finalized_prefix(session, match, sequence, event_id)
     try:
         snapshot, insights = calculate_intelligence(
             events,

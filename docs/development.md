@@ -47,6 +47,15 @@ Defaults and ceilings: at most 10 insights/20 claims, 256 KiB request, 64 KiB re
 
 The local narrative API is enabled only by `MATCHPULSE_DEMO_MODE=true`; the fake provider remains default with `MATCHPULSE_NARRATIVE_PROVIDER=fake`. The browser calls `POST /api/matches/{match_id}/narratives` only after the user presses **Generate Match Narrative**. To explicitly use Azure in a local demo, set `MATCHPULSE_NARRATIVE_PROVIDER=azure` and the three Azure settings in untracked `.env`. This route is unauthenticated, checks loopback access, and must not be exposed publicly.
 
+`MATCHPULSE_DEMO_MODE` is disabled by default in `.env.example`. Set it to `true` in untracked `.env` only for a local demonstration; this enables both the narrative action and Create & Play control. Load `.env` into the same shell before starting the API:
+
+```sh
+set -a
+. ./.env
+set +a
+PYTHONPATH=src .venv/bin/python -m matchpulse_sim serve --host 127.0.0.1 --port 8001
+```
+
 Install package/test dependencies in the isolated virtual environment described above. After PostgreSQL is running and its credentials are configured:
 
 ```sh
@@ -65,9 +74,11 @@ npm ci
 npm run dev
 ```
 
-Vite binds to `127.0.0.1:5174` and proxies `/api` to `http://127.0.0.1:8001` (override only with a local `MATCHPULSE_API_PROXY_TARGET` if the backend uses another loopback port). Open the Vite URL, start a match with the existing local playback CLI, then paste the match ID into the dashboard. The Scenario/Seed/Speed controls create a copyable command; the browser does not launch a terminal, create a match, or submit events. Use a fresh CLI match ID for replay/reset.
+Vite binds to `127.0.0.1:5174` and proxies `/api` to `http://127.0.0.1:8001` (override only with a local `MATCHPULSE_API_PROXY_TARGET` if the backend uses another loopback port). Set `MATCHPULSE_DEMO_MODE=true` in untracked `.env`, then source it before starting FastAPI as described above. Start Vite, open `http://127.0.0.1:5174`, choose a scenario, seed, and playback speed, then select **Create & Play Match**. The dashboard receives the new match ID and connects to its existing state, finalized event, and intelligence endpoints. The copyable terminal command and manual match-ID connection remain available as fallbacks.
 
-The dashboard loads accepted event pages but displays only events through the finalized watermark, and it consumes the existing finalized-only SSE stream with exact event-ID deduplication. Narrative requests are explicit POST actions. The browser receives no Azure credentials. Do not bind either service to a non-loopback interface.
+The local demo control uses `POST /api/demo/playbacks` with a UUIDv4 request ID, one of the four generator scenario identifiers, a nonnegative signed 64-bit seed (the browser further limits it to JavaScript's safe integer range), a speed of `1`, `5`, `10`, or `20`, and an optional `fast_demo` boolean. The dashboard enables Demo Fast Playback by default; it maps the complete generated match clock to 40 seconds and ingests chronological batches of at most 10 events, flushing at most 750 ms of simulated playback time per batch. Network/database overhead is additional, so actual completion varies with local load. Turning fast mode off restores the selected 1×/5×/10×/20× simulation-clock pace. A successful new request returns `202` with its unique match ID; retrying the same request ID and settings is idempotent, while reusing an ID with different settings or starting another active run returns `409`. The response can be polled at `GET /api/demo/playbacks/{request_id}`. Only one run is active per backend process; the process retains up to 32 recent request records. Playback submits the original validated events through the existing API and does not change its SSE contract. The dashboard batches incoming timeline renders for 100 ms and coalesces match-state/intelligence refreshes to at most one per 750 ms while keeping SSE IDs ordered and deduplicated. The feature is local-demo-only and requires both loopback client and host addresses.
+
+The dashboard loads accepted event pages but displays only events through the finalized watermark, and it consumes the existing finalized-only SSE stream with exact event-ID deduplication. Narrative requests are explicit POST actions. The browser receives no Azure credentials. Keep both services bound to loopback; do not treat CORS as authentication or expose the demo controls publicly.
 
 Frontend checks (after `npm ci`):
 
@@ -88,7 +99,7 @@ Feed a reproducible generated stream, or a previously exported complete JSON/JSO
 .venv/bin/python -m matchpulse_sim play --input /tmp/matchpulse-match.jsonl --resume --speed 10
 ```
 
-Playback uses simulation-clock deltas, preserves event IDs and contents, retries uncertain requests idempotently, and can be interrupted with Ctrl-C. Resume checks match, run, accepted sequence, and event identity before sending the remaining suffix. The initial incremental reducer and ingestion path replay the accepted prefix for each addition, so processing cost grows with match history; this implementation is intended for the small synthetic matches used in local demonstrations. Phase 2 has no browser controls, authentication, production deployment, stream retention/reset protocol, or automatic projection repair.
+Playback uses simulation-clock deltas, preserves event IDs and contents, retries uncertain requests idempotently, and can be interrupted with Ctrl-C. Resume checks match, run, accepted sequence, and event identity before sending the remaining suffix. The initial incremental reducer and ingestion path replay the accepted prefix for each addition, so processing cost grows with match history; this implementation is intended for the small synthetic matches used in local demonstrations. Phase 2 itself has no authentication, production deployment, stream retention/reset protocol, or automatic projection repair. The Phase 5 browser demo control is process-local, unauthenticated, and restricted to loopback use.
 
 ## Planned validation approach
 

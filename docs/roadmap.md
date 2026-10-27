@@ -58,7 +58,7 @@ See [the Phase 3 intelligence contract](phase3-intelligence-contract.md) for fin
 
 **Status: Minimum dashboard implemented locally; awaiting final review and acceptance verification.**
 
-The local dashboard includes a scoreboard, finalized event timeline, Phase 3 metrics and evidence-linked insights, SSE connection/reconnect handling, synthetic labeling, and explicit fake-provider narrative generation. Scenario, seed, and speed controls produce a copyable existing CLI playback command. The browser does not launch playback or add an ingestion endpoint. Broadcast overlay layout, visual accessibility review, and a full PostgreSQL-backed browser rehearsal remain to be verified.
+The local dashboard includes a scoreboard, finalized event timeline, Phase 3 metrics and evidence-linked insights, SSE connection/reconnect handling, synthetic labeling, and explicit fake-provider narrative generation. With local demo mode enabled, scenario, seed, and speed controls create a unique match and start the existing synthetic playback helper through a loopback-only control; the copyable CLI command remains available as a fallback. The existing ingestion and SSE contracts are unchanged. Broadcast overlay layout, visual accessibility review, and a full PostgreSQL-backed browser rehearsal remain to be verified.
 
 - **Objective:** Present live match state and developments to users.
 - **Scope:** React/TypeScript/Vite application, SSE consumption, match dashboard, and broadcast graphics/overlay layout.

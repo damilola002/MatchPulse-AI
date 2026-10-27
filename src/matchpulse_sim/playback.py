@@ -16,6 +16,8 @@ class PlaybackError(RuntimeError):
 
 MAX_REQUEST_BODY_BYTES = 1024 * 1024
 MAX_BATCH_EVENTS = 100
+FAST_DEMO_MAX_BATCH_EVENTS = 10
+FAST_DEMO_MAX_BATCH_SECONDS = 0.75
 
 
 def _request_size(payload: dict[str, Any]) -> int:
@@ -53,11 +55,17 @@ def _request_json(method: str, url: str, payload: dict[str, Any] | None, *, retr
 def play_events(
     events: list[dict[str, Any]], *, base_url: str = "http://127.0.0.1:8001",
     speed: float = 1.0, resume: bool = False,
+    target_duration_seconds: float | None = None,
     sleep: Callable[[float], None] = time.sleep,
 ) -> dict[str, Any]:
     """Start and feed a complete validated stream; retries preserve event IDs."""
     if not math.isfinite(speed) or speed <= 0:
         raise PlaybackError("playback speed must be positive")
+    if target_duration_seconds is not None and (
+        not math.isfinite(target_duration_seconds)
+        or not 30 <= target_duration_seconds <= 60
+    ):
+        raise PlaybackError("fast-demo duration must be between 30 and 60 seconds")
     parsed_url = urlparse(base_url)
     if parsed_url.scheme != "http" or parsed_url.hostname not in {"localhost", "127.0.0.1", "::1"} or parsed_url.path not in {"", "/"}:
         raise PlaybackError("playback API URL must use HTTP on loopback")
@@ -86,27 +94,55 @@ def play_events(
         _request_json("POST", start_url, start_payload)
 
     previous_clock = events[first_unaccepted - 1]["clock"]["match_elapsed_ms"]
+    total_clock = events[-1]["clock"]["match_elapsed_ms"]
+    if target_duration_seconds is not None and total_clock <= 0:
+        raise PlaybackError("fast-demo input must span a positive match clock")
+    fast_batch = target_duration_seconds is not None
+    batch_limit = FAST_DEMO_MAX_BATCH_EVENTS if fast_batch else MAX_BATCH_EVENTS
+    batch_window = FAST_DEMO_MAX_BATCH_SECONDS if fast_batch else None
     batch: list[dict[str, Any]] = []
     batches: list[list[dict[str, Any]]] = []
+    batch_start_offset = 0.0
     for event in events[first_unaccepted:]:
         candidate = [*batch, event]
         candidate_payload = {"events": candidate}
-        if batch and (len(candidate) > MAX_BATCH_EVENTS or _request_size(candidate_payload) > MAX_REQUEST_BODY_BYTES):
+        event_offset = (
+            event["clock"]["match_elapsed_ms"] / total_clock * target_duration_seconds
+            if fast_batch else 0.0
+        )
+        window_elapsed = event_offset - batch_start_offset if batch else 0.0
+        if batch and (
+            len(candidate) > batch_limit
+            or (batch_window is not None and window_elapsed > batch_window)
+            or _request_size(candidate_payload) > MAX_REQUEST_BODY_BYTES
+        ):
             batches.append(batch)
             batch = [event]
+            batch_start_offset = event_offset
         else:
+            if not batch:
+                batch_start_offset = event_offset
             batch = candidate
         if _request_size({"events": batch}) > MAX_REQUEST_BODY_BYTES:
             raise PlaybackError("an event exceeds the API 1 MiB request limit")
     if batch:
         batches.append(batch)
 
+    previous_offset = previous_clock / total_clock * target_duration_seconds if fast_batch else 0.0
     for batch in batches:
-        for event in batch:
-            now_clock = event["clock"]["match_elapsed_ms"]
-            delta = max(0, now_clock - previous_clock)
-            if delta:
-                sleep(delta / 1000 / speed)
-            previous_clock = now_clock
+        batch_clock = batch[-1]["clock"]["match_elapsed_ms"]
+        if fast_batch:
+            target_offset = batch_clock / total_clock * target_duration_seconds
+            delay = max(0.0, target_offset - previous_offset)
+            if delay:
+                sleep(delay)
+            previous_offset = target_offset
+        else:
+            for event in batch:
+                now_clock = event["clock"]["match_elapsed_ms"]
+                delta = max(0, now_clock - previous_clock)
+                if delta:
+                    sleep(delta / 1000 / speed)
+                previous_clock = now_clock
         _request_json("POST", f"{base_url.rstrip('/')}/api/matches/{match_id}/events", {"events": batch})
     return _request_json("GET", state_url, None)

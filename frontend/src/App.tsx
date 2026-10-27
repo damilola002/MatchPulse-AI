@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ApiError,
+  createDemoPlayback,
+  fetchDemoPlayback,
   fetchEventHistory,
   fetchIntelligence,
   fetchMatchState,
@@ -8,6 +10,7 @@ import {
   mergeEvents,
   parseEvent,
   type IntelligenceResponse,
+  type DemoPlayback,
   type MatchEvent,
   type MatchState,
   type NarrativeResponse,
@@ -47,12 +50,20 @@ function metricValue(value: number | string | null | undefined): string {
   return value === null || value === undefined ? '—' : String(value);
 }
 
+function contiguousSequence(events: MatchEvent[], watermark: number): number {
+  const sequences = new Set(events.filter((event) => event.sequence <= watermark).map((event) => event.sequence));
+  let sequence = 0;
+  while (sequence < watermark && sequences.has(sequence + 1)) sequence += 1;
+  return sequence;
+}
+
 export function App() {
   const [matchInput, setMatchInput] = useState('');
   const [matchId, setMatchId] = useState('');
   const [connection, setConnection] = useState<Connection>('idle');
   const [state, setState] = useState<MatchState | null>(null);
   const [events, setEvents] = useState<MatchEvent[]>([]);
+  const eventsRef = useRef<MatchEvent[]>([]);
   const [intelligence, setIntelligence] = useState<IntelligenceResponse | null>(null);
   const [selectedInsights, setSelectedInsights] = useState<string[]>([]);
   const [narrative, setNarrative] = useState<NarrativeResponse | null>(null);
@@ -61,13 +72,42 @@ export function App() {
   const [scenario, setScenario] = useState('balanced');
   const [seed, setSeed] = useState(17);
   const [speed, setSpeed] = useState(10);
+  const [fastDemo, setFastDemo] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [playback, setPlayback] = useState<DemoPlayback | null>(null);
+  const [playbackStarting, setPlaybackStarting] = useState(false);
+  const requestIdForRetry = useRef<string | null>(null);
   const refreshVersion = useRef(0);
+  const refreshTimer = useRef<number | null>(null);
 
   const labels = useMemo(() => teamNames(events, state), [events, state]);
   const timelineEvents = events.filter((event) => event.type !== 'match_start');
   const teams = intelligence?.metric_snapshot.teams ?? [];
   const command = `PYTHONPATH=src .venv/bin/python -m matchpulse_sim play --scenario ${scenario} --seed ${seed} --speed ${speed}`;
+  const playbackActive = playback?.status === 'starting' || playback?.status === 'running';
+  const seedValid = Number.isSafeInteger(seed) && seed >= 0 && seed <= 0xffff_ffff_ffff_ffff;
+
+  useEffect(() => {
+    if (!playback || !['starting', 'running'].includes(playback.status)) return undefined;
+    const controller = new AbortController();
+    let active = true;
+    let timer: number | undefined;
+    const poll = async () => {
+      try {
+        const latest = await fetchDemoPlayback(playback.request_id, controller.signal);
+        if (!active) return;
+        setPlayback(latest);
+        if (latest.status === 'failed') setError('Synthetic playback stopped before full time. You can retry with a new run.');
+      } catch (caught) {
+        if (!active || controller.signal.aborted) return;
+        setError(caught instanceof Error ? caught.message : 'Playback status could not be loaded.');
+      } finally {
+        if (active) timer = window.setTimeout(() => void poll(), 500);
+      }
+    };
+    void poll();
+    return () => { active = false; controller.abort(); if (timer !== undefined) window.clearTimeout(timer); };
+  }, [playback?.request_id, playback?.status]);
 
   useEffect(() => {
     if (!matchId) return undefined;
@@ -76,27 +116,59 @@ export function App() {
     let source: EventSource | undefined;
     let finalized = false;
     let active = true;
+    let queuedEvents: MatchEvent[] = [];
+    const historyCache = new Map<string, MatchEvent[]>();
+    const historyRequests = new Map<string, Promise<MatchEvent[]>>();
+    let eventFlushTimer: number | null = null;
     setState(null);
     setEvents([]);
+    eventsRef.current = [];
     setIntelligence(null);
     setNarrative(null);
     setSelectedInsights([]);
     setError('');
     setConnection('connecting');
 
+    const mergeIntoState = (incoming: MatchEvent[], watermark: number) => {
+      setEvents((previous) => {
+        const finalizedThrough = Math.max(watermark, ...previous.map((event) => event.sequence), 0);
+        const merged = mergeEvents(previous, incoming, finalizedThrough);
+        eventsRef.current = merged;
+        return merged;
+      });
+    };
+
+    const loadMissingHistory = (watermark: number): Promise<MatchEvent[]> => {
+      const afterSequence = contiguousSequence(eventsRef.current, watermark);
+      if (afterSequence >= watermark) return Promise.resolve([]);
+      const key = `${afterSequence}:${watermark}`;
+      const cached = historyCache.get(key);
+      if (cached) return Promise.resolve(cached);
+      const pending = historyRequests.get(key);
+      if (pending) return pending;
+      const request = fetchEventHistory(currentMatchId, watermark, controller.signal, afterSequence)
+        .then((history) => {
+          historyCache.set(key, history);
+          return history;
+        })
+        .finally(() => historyRequests.delete(key));
+      historyRequests.set(key, request);
+      return request;
+    };
+
     const refresh = async (includeHistory = true) => {
       const version = ++refreshVersion.current;
       try {
         const nextState = await fetchMatchState(currentMatchId, controller.signal);
-        const [history, nextIntelligence] = includeHistory
-          ? await Promise.all([
-            fetchEventHistory(currentMatchId, nextState.last_finalized_sequence, controller.signal),
-            fetchIntelligence(currentMatchId, controller.signal),
-          ])
-          : [[], await fetchIntelligence(currentMatchId, controller.signal)] as [MatchEvent[], IntelligenceResponse];
-        if (!active || controller.signal.aborted || version !== refreshVersion.current) return;
+        const synchronizeHistory = includeHistory || nextState.status === 'ended';
+        const [history, nextIntelligence] = await Promise.all([
+          synchronizeHistory ? loadMissingHistory(nextState.last_finalized_sequence) : Promise.resolve([]),
+          fetchIntelligence(currentMatchId, controller.signal),
+        ]);
+        if (!active || controller.signal.aborted) return;
+        if (history.length > 0) mergeIntoState(history, nextState.last_finalized_sequence);
+        if (version !== refreshVersion.current) return;
         setState(nextState);
-        setEvents((previous) => mergeEvents(previous, history, Math.max(nextState.last_finalized_sequence, ...previous.map((event) => event.sequence), 0)));
         setIntelligence(nextIntelligence);
         setSelectedInsights((previous) => previous.filter((id) => nextIntelligence.insights.some((insight) => insight.insight_id === id)));
         if (nextState.status === 'ended') {
@@ -112,6 +184,17 @@ export function App() {
       }
     };
 
+    const flushQueuedEvents = () => {
+      if (eventFlushTimer !== null) window.clearTimeout(eventFlushTimer);
+      eventFlushTimer = null;
+      const pending = queuedEvents;
+      queuedEvents = [];
+      if (pending.length > 0) {
+        const finalizedSequence = Math.max(...pending.map((event) => event.sequence));
+        mergeIntoState(pending, finalizedSequence);
+      }
+    };
+
     source = new EventSource(`/api/matches/${encodeURIComponent(currentMatchId)}/stream`);
     source.onopen = () => { if (active && !finalized) setConnection('live'); };
     source.onerror = () => {
@@ -124,13 +207,21 @@ export function App() {
         const message = raw as MessageEvent<string>;
         const event = parseEvent(JSON.parse(message.data));
         if (event.match_id !== currentMatchId || (message.lastEventId && message.lastEventId !== event.event_id)) return;
-        setEvents((previous) => mergeEvents(previous, [event], Math.max(event.sequence, state?.last_finalized_sequence ?? 0)));
+        queuedEvents.push(event);
         if (event.type === 'full_time') {
-          finalized = true;
-          setConnection('finalized');
-          source?.close();
+          flushQueuedEvents();
+          if (refreshTimer.current !== null) window.clearTimeout(refreshTimer.current);
+          refreshTimer.current = null;
+          void refresh(true);
+          return;
         }
-        void refresh(false);
+        if (eventFlushTimer === null) eventFlushTimer = window.setTimeout(flushQueuedEvents, 100);
+        if (refreshTimer.current === null) {
+          refreshTimer.current = window.setTimeout(() => {
+            refreshTimer.current = null;
+            void refresh(false);
+          }, 750);
+        }
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : 'The live event stream returned invalid data.');
       }
@@ -141,6 +232,10 @@ export function App() {
     return () => {
       active = false;
       controller.abort();
+      if (eventFlushTimer !== null) window.clearTimeout(eventFlushTimer);
+      queuedEvents = [];
+      if (refreshTimer.current !== null) window.clearTimeout(refreshTimer.current);
+      refreshTimer.current = null;
       source?.removeEventListener('match.event', onMatchEvent);
       source?.close();
     };
@@ -163,6 +258,26 @@ export function App() {
       setError(caught instanceof ApiError ? `${caught.message} (${caught.code})` : caught instanceof Error ? caught.message : 'Narrative generation failed.');
     } finally {
       setNarrativeLoading(false);
+    }
+  };
+
+  const createAndPlay = async () => {
+    if (playbackStarting || playbackActive || !seedValid) return;
+    setPlaybackStarting(true);
+    setError('');
+    try {
+      const requestId = requestIdForRetry.current ?? crypto.randomUUID();
+      requestIdForRetry.current = requestId;
+      const created = await createDemoPlayback({ request_id: requestId, scenario, seed, speed, fast_demo: fastDemo });
+      requestIdForRetry.current = null;
+      setPlayback(created);
+      setMatchInput(created.match_id);
+      setMatchId(created.match_id);
+    } catch (caught) {
+      if (caught instanceof ApiError && caught.status < 500) requestIdForRetry.current = null;
+      setError(caught instanceof Error ? caught.message : 'Synthetic match could not be started.');
+    } finally {
+      setPlaybackStarting(false);
     }
   };
 
@@ -190,7 +305,7 @@ export function App() {
       <section className="hero" id="top">
         <div className="hero-copy"><p className="eyebrow">THE GAME, MADE EXPLAINABLE</p><h1>Every moment.<br /><em>More meaning.</em></h1><p className="hero-subtitle">A live intelligence layer for fictional football matches. Follow the evidence from event to insight to narrative.</p></div>
         <div className="connect-card">
-          <label htmlFor="match-id">Connect to a local match</label>
+          <label htmlFor="match-id">Connect to an existing local match</label>
           <div className="connect-row"><input id="match-id" value={matchInput} onChange={(event) => setMatchInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') connect(); }} placeholder="Paste match ID" /><button className="button button-primary" onClick={connect}>Connect <span aria-hidden="true">↗</span></button></div>
           <p>Start playback in a terminal, then connect with the match ID.</p>
         </div>
@@ -207,8 +322,8 @@ export function App() {
       <section className="dashboard-grid">
         <article className="panel timeline-panel">
           <div className="panel-heading"><div><p className="eyebrow">MATCH FLOW</p><h2>Event timeline</h2></div><span className="count-badge">{events.filter((event) => event.type !== 'match_start').length} events</span></div>
-          {!matchId ? <EmptyState title="Your match, in sequence" body="Connect to a local match to follow finalized events as they happen." /> : timelineEvents.length === 0 ? <EmptyState title="Waiting for finalized events" body="The feed will appear here as the reducer finalizes each transition." /> : <ol className="timeline">{timelineEvents.slice(-60).reverse().map((event) => <li className={`timeline-item ${event.type === 'goal' ? 'timeline-goal' : ''}`} key={event.event_id}><span className="timeline-marker">{eventIcon(event.type)}</span><time>{formatClock(event.clock.match_elapsed_ms)}</time><div className="timeline-copy"><strong>{eventTitle(event.type)}</strong><span>{event.team_id ? labels[event.team_id] ?? event.team_id : eventDetail(event)}</span></div><span className="event-sequence">{String(event.sequence).padStart(3, '0')}</span></li>)}</ol>}
-          <div className="panel-footnote"><span className="legend-dot" /> Finalized events only <span className="footnote-sep">·</span> Ordered by sequence{timelineEvents.length > 60 ? ' · Latest 60 shown' : ''}</div>
+          {!matchId ? <EmptyState title="Your match, in sequence" body="Connect to a local match to follow finalized events as they happen." /> : timelineEvents.length === 0 ? <EmptyState title="Waiting for finalized events" body="The feed will appear here as the reducer finalizes each transition." /> : <ol className="timeline">{timelineEvents.slice().reverse().map((event) => <li className={`timeline-item ${event.type === 'goal' ? 'timeline-goal' : ''}`} key={event.event_id}><span className="timeline-marker">{eventIcon(event.type)}</span><time>{formatClock(event.clock.match_elapsed_ms)}</time><div className="timeline-copy"><strong>{eventTitle(event.type)}</strong><span>{event.team_id ? labels[event.team_id] ?? event.team_id : eventDetail(event)}</span></div><span className="event-sequence">{String(event.sequence).padStart(3, '0')}</span></li>)}</ol>}
+          <div className="panel-footnote"><span className="legend-dot" /> Finalized events only <span className="footnote-sep">·</span> Ordered by sequence</div>
         </article>
 
         <div className="right-column">
@@ -230,7 +345,7 @@ export function App() {
         <div className="narrative-output">{narrativeLoading ? <div className="narrative-placeholder"><span className="spinner spinner-large" /><strong>Grounding the selected insights</strong><span>Resolving claims against the finalized snapshot…</span></div> : narrative ? <><div className="narrative-top"><span className="narrative-tag">SYNTHETIC · DEMO NARRATION</span><span className="provider-tag">{narrative.provider}</span></div><div className="narrative-blocks">{narrative.blocks.map((block, index) => <blockquote key={block.claim_ids[0]}><span className="quote-index">0{index + 1}</span><p>{block.text}</p><footer>Insight {block.insight_ids[0].slice(-8)} <span>·</span> Evidence {block.evidence_event_ids.join(', ')}</footer></blockquote>)}</div></> : <div className="narrative-placeholder"><span className="quote-mark">“</span><strong>Insight-led storytelling, with receipts.</strong><span>Your selected claims stay tied to the events that support them.</span></div>}</div>
       </section>
 
-      <section className="demo-controls panel"><div className="demo-heading"><div><p className="eyebrow">REPEATABLE DEMO</p><h2>Run a synthetic scenario</h2></div><span className="demo-label">LOCAL TERMINAL PLAYBACK</span></div><div className="demo-control-row"><label>Scenario<select value={scenario} onChange={(event) => setScenario(event.target.value)}>{Object.entries(scenarioLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><label>Seed<input type="number" min="0" value={seed} onChange={(event) => setSeed(Number(event.target.value))} /></label><label>Playback speed<select value={speed} onChange={(event) => setSpeed(Number(event.target.value))}><option value={1}>1×</option><option value={5}>5×</option><option value={10}>10×</option><option value={20}>20×</option></select></label><button className="button button-outline" onClick={() => void copyCommand()}>{copied ? 'Copied command ✓' : 'Copy playback command'}</button></div><code className="command-line">{command}</code><p className="demo-help">Run the command in the project terminal, then paste its match ID above. Replay/reset starts a fresh match ID; this browser never launches a shell or creates ingestion requests.</p></section>
+      <section className="demo-controls panel"><div className="demo-heading"><div><p className="eyebrow">REPEATABLE DEMO</p><h2>Run a synthetic scenario</h2></div><span className="demo-label">LOCAL SYNTHETIC PLAYBACK</span></div><div className="demo-control-row"><label>Scenario<select value={scenario} onChange={(event) => setScenario(event.target.value)}>{Object.entries(scenarioLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><label>Seed<input type="number" min="0" max="9007199254740991" step="1" value={seed} onChange={(event) => setSeed(Number(event.target.value))} /></label><label>Playback speed (standard mode)<select value={speed} onChange={(event) => setSpeed(Number(event.target.value))}><option value={1}>1×</option><option value={5}>5×</option><option value={10}>10×</option><option value={20}>20×</option></select></label><label className="fast-demo-toggle"><input type="checkbox" checked={fastDemo} onChange={(event) => setFastDemo(event.target.checked)} /> Demo Fast Playback <span>~40 sec</span></label><button className="button button-primary" disabled={!seedValid || playbackStarting || playbackActive} onClick={() => void createAndPlay()}>{playbackStarting ? 'Preparing…' : playbackActive ? 'Playing…' : 'Create & Play Match'}</button><button className="button button-outline" onClick={() => void copyCommand()}>{copied ? 'Copied command ✓' : 'Copy playback command'}</button></div><code className="command-line">{command}</code><p className="demo-help">{playback?.status === 'completed' ? `Completed · Match ${playback.match_id} finished.` : playback?.status === 'failed' ? 'Failed · Playback stopped before full time; inspect the local backend before retrying.' : playbackActive ? `${playback.status === 'starting' ? 'Preparing' : 'Playing'} · Synthetic match ${playback.match_id} · the dashboard is updating from finalized events.` : 'Preparing a local synthetic run only when you select Create & Play Match. The terminal command and manual Match ID connection remain available.'}</p></section>
 
       <footer className="site-footer"><span>MatchPulse AI <b>·</b> Fictional match intelligence</span><span>All match data is synthetic and not official Premier League data.</span></footer>
     </main>

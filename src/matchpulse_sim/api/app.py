@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import asyncio
+from hashlib import sha256
 import ipaddress
 import json
 import os
 import re
+from collections import OrderedDict
 import time
 from typing import Any, Callable
+from uuid import uuid4
 
 from fastapi import Depends, FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
@@ -18,17 +21,22 @@ from sqlalchemy.orm import Session, sessionmaker
 from starlette.concurrency import run_in_threadpool
 
 from ..serialization import canonical_json
+from ..generator import generate_events
+from ..models import MatchConfig, Scenario, default_fixtures
 from ..narrative.azure import AzureOpenAIProvider
 from ..narrative.claims import prepare_narrative_request
 from ..narrative.contracts import NarrativeGenerationRequest, NarrativeResponseV1
 from ..narrative.errors import NarrativeError
 from ..narrative.providers import DeterministicFakeProvider
 from ..narrative.service import NarrativeService
+from ..playback import play_events
 from .database import ConfigurationError, application_engine, session_factory
 from .errors import ApiProblem, MatchNotFound
 from .models import MatchEventRecord, MatchRecord
 from .schemas import (
     EventBatchRequest,
+    DemoPlaybackRequest,
+    DemoPlaybackResponse,
     EventPageResponse,
     IntelligenceResponse,
     IngestResponse,
@@ -51,6 +59,9 @@ SSE_POLL_SECONDS = 0.5
 SSE_HEARTBEAT_SECONDS = 15.0
 SSE_PAGE_SIZE = 1
 MAX_LAST_EVENT_ID_LENGTH = 52  # 32 hex run ID, colon, signed PostgreSQL BIGINT sequence.
+MAX_DEMO_PLAYBACK_RECORDS = 32
+DEMO_FAST_PLAYBACK_SECONDS = 40.0
+DEMO_PLAYBACK_BASE_URL = "http://127.0.0.1:8001"
 _CURSOR = re.compile(r"^([a-f0-9]{32}):([1-9][0-9]{0,18})$")
 
 
@@ -65,7 +76,10 @@ class RequestBodyLimitMiddleware:
         if (
             scope["type"] != "http"
             or scope.get("method") != "POST"
-            or not scope.get("path", "").startswith("/api/matches")
+            or not (
+                scope.get("path", "").startswith("/api/matches")
+                or scope.get("path") == "/api/demo/playbacks"
+            )
         ):
             await self.app(scope, receive, send)
             return
@@ -127,6 +141,10 @@ def create_app(engine: Engine | None = None) -> FastAPI:
     app.state.sessions = session_factory(engine) if engine is not None else None
     app.state.active_sse = 0
     app.state.narrative_services = {}
+    app.state.demo_playbacks = OrderedDict()
+    app.state.active_demo_playback = None
+    app.state.demo_playback_lock = asyncio.Lock()
+    app.state.demo_tasks = set()
 
     def get_sessions() -> sessionmaker[Session]:
         if app.state.sessions is not None:
@@ -135,6 +153,21 @@ def create_app(engine: Engine | None = None) -> FastAPI:
             app.state.engine = application_engine()
             app.state.sessions = session_factory(app.state.engine)
         return app.state.sessions
+
+    def require_local_demo(request: Request) -> None:
+        if os.environ.get("MATCHPULSE_DEMO_MODE", "").strip().lower() not in {"1", "true", "yes"}:
+            raise ApiProblem(404, "demo_mode_disabled", "local demo controls are disabled")
+        try:
+            peer = ipaddress.ip_address(request.client.host if request.client else "")
+            host = (request.url.hostname or "").lower()
+            host_is_loopback = host == "localhost" or ipaddress.ip_address(host).is_loopback
+        except ValueError:
+            peer = None
+            host_is_loopback = False
+        if peer is None or not peer.is_loopback or not host_is_loopback:
+            raise ApiProblem(403, "demo_loopback_only", "demo controls are available only over loopback")
+        if request.url.port not in (8001, 5174):
+            raise ApiProblem(403, "demo_loopback_only", "demo controls require the configured loopback API port")
 
     def db() -> Any:
         sessions = get_sessions()
@@ -233,6 +266,127 @@ def create_app(engine: Engine | None = None) -> FastAPI:
             match, duplicate = start_match(session, body.start_event)
             result = {"state": get_state(session, match.match_id), "duplicate": duplicate}
         return JSONResponse(result, status_code=200 if duplicate else 201)
+
+    @app.post(
+        "/api/demo/playbacks",
+        response_model=DemoPlaybackResponse,
+        status_code=202,
+        tags=["local demo"],
+    )
+    async def create_demo_playback(body: DemoPlaybackRequest, request: Request) -> JSONResponse:
+        require_local_demo(request)
+        request_payload = body.model_dump(mode="json")
+        request_digest = sha256(canonical_json(request_payload).encode("utf-8")).hexdigest()
+        async with app.state.demo_playback_lock:
+            previous = app.state.demo_playbacks.get(body.request_id)
+            if previous is not None:
+                if previous["request_digest"] != request_digest:
+                    raise ApiProblem(409, "demo_request_conflict", "request ID was already used with different settings")
+                app.state.demo_playbacks.move_to_end(body.request_id)
+                return JSONResponse(
+                    {
+                        "request_id": body.request_id,
+                        "match_id": previous["match_id"],
+                        "status": previous["status"],
+                        "duplicate": True,
+                        "error": previous["error"],
+                    },
+                    status_code=200,
+                )
+            if app.state.active_demo_playback is not None:
+                raise ApiProblem(409, "demo_playback_capacity", "a synthetic demo playback is already active")
+
+            while len(app.state.demo_playbacks) >= MAX_DEMO_PLAYBACK_RECORDS:
+                old_request_id, old_record = next(iter(app.state.demo_playbacks.items()))
+                if old_record["status"] in {"starting", "running"}:
+                    app.state.demo_playbacks.move_to_end(old_request_id)
+                    continue
+                del app.state.demo_playbacks[old_request_id]
+
+            match_id = f"demo-{uuid4().hex}"
+            try:
+                events = generate_events(
+                    MatchConfig(
+                        seed=body.seed,
+                        match_id=match_id,
+                        teams=default_fixtures(),
+                        scenario=Scenario(body.scenario),
+                    )
+                )
+            except (TypeError, ValueError) as exc:
+                raise ApiProblem(422, "invalid_demo_configuration", "synthetic match settings are invalid") from exc
+
+            def create_start() -> None:
+                with get_sessions()() as session, session.begin():
+                    start_match(session, events[0])
+
+            await run_in_threadpool(create_start)
+            record = {
+                "request_id": body.request_id,
+                "request_digest": request_digest,
+                "match_id": match_id,
+                "status": "starting",
+                "error": None,
+            }
+            app.state.demo_playbacks[body.request_id] = record
+            app.state.active_demo_playback = body.request_id
+
+            async def run_playback() -> None:
+                record["status"] = "running"
+                final_status = "completed"
+                final_error = None
+                try:
+                    await asyncio.to_thread(
+                        play_events,
+                        events,
+                        base_url=DEMO_PLAYBACK_BASE_URL,
+                        speed=body.speed,
+                        resume=True,
+                        target_duration_seconds=DEMO_FAST_PLAYBACK_SECONDS if body.fast_demo else None,
+                    )
+                except Exception:
+                    final_status = "failed"
+                    final_error = "playback_failed"
+                finally:
+                    async with app.state.demo_playback_lock:
+                        record["status"] = final_status
+                        record["error"] = final_error
+                        if app.state.active_demo_playback == body.request_id:
+                            app.state.active_demo_playback = None
+
+            task = asyncio.create_task(run_playback())
+            app.state.demo_tasks.add(task)
+            task.add_done_callback(app.state.demo_tasks.discard)
+            return JSONResponse(
+                {
+                    "request_id": body.request_id,
+                    "match_id": match_id,
+                    "status": "starting",
+                    "duplicate": False,
+                    "error": None,
+                },
+                status_code=202,
+            )
+
+    @app.get(
+        "/api/demo/playbacks/{request_id}",
+        response_model=DemoPlaybackResponse,
+        tags=["local demo"],
+    )
+    async def get_demo_playback(request_id: str, request: Request) -> dict[str, Any]:
+        require_local_demo(request)
+        async with app.state.demo_playback_lock:
+            record = app.state.demo_playbacks.get(request_id)
+            if record is None:
+                raise ApiProblem(404, "demo_playback_not_found", "demo playback request was not found")
+            app.state.demo_playbacks.move_to_end(request_id)
+            return {
+                "request_id": request_id,
+                "match_id": record["match_id"],
+                "status": record["status"],
+                "duplicate": False,
+                "error": record["error"],
+            }
 
     @app.post("/api/matches/{match_id}/events", response_model=IngestResponse)
     def ingest_endpoint(match_id: str, body: EventBatchRequest, session: Session = Depends(db)) -> dict[str, Any]:

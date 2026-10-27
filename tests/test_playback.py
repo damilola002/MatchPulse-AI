@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from urllib.error import URLError
 
+import pytest
+
 from matchpulse_sim.generator import generate_events
 from matchpulse_sim.models import MatchConfig, Scenario, default_fixtures
 from matchpulse_sim.playback import PlaybackError, _request_json, play_events
@@ -95,6 +97,34 @@ def test_playback_paces_and_partitions_batches(monkeypatch):
             expected.append(delta / 1000 / 2.0)
         previous = clock
     assert sleeps == expected
+
+
+def test_fast_demo_paces_and_posts_progressive_ordered_batches(monkeypatch):
+    import matchpulse_sim.playback as playback
+
+    events = generate_events(MatchConfig(seed=17, match_id="fast-demo", teams=default_fixtures(), scenario=Scenario.BALANCED))
+    calls = []
+    sleeps = []
+
+    def fake_request(method, url, payload, **_kwargs):
+        calls.append((method, payload))
+        return {"complete": True} if method == "GET" else {"ok": True}
+
+    monkeypatch.setattr(playback, "_request_json", fake_request)
+    assert play_events(events, speed=10, target_duration_seconds=40, sleep=sleeps.append) == {"complete": True}
+    batches = [payload["events"] for method, payload in calls if method == "POST" and "events" in payload]
+    assert len(batches) > 1
+    assert all(0 < len(batch) <= playback.FAST_DEMO_MAX_BATCH_EVENTS for batch in batches)
+    assert [event["sequence"] for batch in batches for event in batch] == list(range(2, len(events) + 1))
+    assert sum(sleeps) == pytest.approx(40.0)
+    assert any(delay > 0 for delay in sleeps)
+    for boundary in (30, 60):
+        boundary_sleeps = []
+        play_events(events, speed=10, target_duration_seconds=boundary, sleep=boundary_sleeps.append)
+        assert sum(boundary_sleeps) == pytest.approx(boundary)
+    for invalid_duration in (29, 61):
+        with pytest.raises(PlaybackError, match="between 30 and 60"):
+            play_events(events, target_duration_seconds=invalid_duration, sleep=sleeps.append)
 
 
 def test_cli_playback_cancellation_returns_130(monkeypatch, capsys):

@@ -20,6 +20,14 @@ const goalEvent: MatchEvent = {
   ...startEvent, event_id: `${'a'.repeat(32)}:4`, sequence: 4, type: 'goal', team_id: 'home-x', outcome: 'scored',
   clock: { match_elapsed_ms: 600000, period_elapsed_ms: 600000, period: 'first_half' }, data: {},
 };
+const passEvent: MatchEvent = {
+  ...startEvent, event_id: `${'a'.repeat(32)}:2`, sequence: 2, type: 'pass', team_id: 'home-x', outcome: 'completed',
+  clock: { match_elapsed_ms: 120000, period_elapsed_ms: 120000, period: 'first_half' }, data: {},
+};
+const shotEvent: MatchEvent = {
+  ...startEvent, event_id: `${'a'.repeat(32)}:3`, sequence: 3, type: 'shot', team_id: 'away-y', outcome: 'saved',
+  clock: { match_elapsed_ms: 300000, period_elapsed_ms: 300000, period: 'first_half' }, data: {},
+};
 const intelligence = {
   match_id: 'demo-match', simulation_run_id: 'a'.repeat(32), synthetic: true,
   as_of: { sequence: 4, event_id: goalEvent.event_id, match_elapsed_ms: 600000 },
@@ -56,15 +64,31 @@ function setupNetwork() {
   vi.stubGlobal('EventSource', class extends FakeEventSource {
     constructor() { super(); latestSource = this; queueMicrotask(() => { this.readyState = FakeEventSource.OPEN; this.onopen?.(); }); }
   });
+  let demoScenario = 'balanced';
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
+    const demoMatchId = `demo-${'e'.repeat(32)}`;
+    const matchPath = url.split('/api/matches/')[1]?.split('/')[0];
     if (url.includes('/missing/')) return {
       ok: false, status: 404, json: async () => ({ error: { code: 'match_not_found', message: 'match was not found' } }),
     } as Response;
+    if (url.endsWith('/api/demo/playbacks') && init?.method === 'POST') {
+      const request = JSON.parse(String(init.body));
+      demoScenario = request.scenario;
+      return { ok: true, status: 202, json: async () => ({ request_id: request.request_id, match_id: demoMatchId, status: 'starting', duplicate: false, error: null }) } as Response;
+    }
+    if (url.includes('/api/demo/playbacks/')) {
+      return { ok: true, status: 200, json: async () => ({ request_id: url.split('/').at(-1), match_id: demoMatchId, status: 'running', duplicate: false, error: null }) } as Response;
+    }
     let body: unknown;
-    if (url.endsWith('/state')) body = state;
-    else if (url.includes('/events?')) body = { events: [startEvent, goalEvent], next_after_sequence: 4 };
-    else if (url.includes('/intelligence')) body = intelligence;
+    if (url.endsWith('/state')) body = { ...state, match_id: matchPath, scenario_id: demoScenario };
+    else if (url.includes('/events?')) body = { events: [startEvent, passEvent, shotEvent, goalEvent].map((event) => ({ ...event, match_id: matchPath })), next_after_sequence: 4 };
+    else if (url.includes('/intelligence')) body = {
+      ...intelligence,
+      match_id: matchPath,
+      metric_snapshot: { ...intelligence.metric_snapshot, match_id: matchPath },
+      insights: intelligence.insights.map((insight) => ({ ...insight, match_id: matchPath })),
+    };
     else if (url.endsWith('/narratives') && init?.method === 'POST') body = {
       schema_version: 1, narrative_id: 'narrative:v1:' + 'c'.repeat(64), narrative_kind: 'match_insight_explanation', language: 'en', match_id: 'demo-match',
       simulation_run_id: 'a'.repeat(32), synthetic: true, as_of: intelligence.as_of, provider: 'deterministic-fake', model: 'fake-v1',
@@ -116,7 +140,7 @@ describe('dashboard', () => {
   it('renders synthetic scoreboard, ordered timeline, metrics, and evidence; narrative is explicit', async () => {
     const fetchMock = setupNetwork();
     render(<App />);
-    fireEvent.change(screen.getByLabelText('Connect to a local match'), { target: { value: 'demo-match' } });
+    fireEvent.change(screen.getByLabelText('Connect to an existing local match'), { target: { value: 'demo-match' } });
     fireEvent.click(screen.getByRole('button', { name: /connect/i }));
     expect(await screen.findByText('SYNTHETIC DATA')).toBeInTheDocument();
     expect((await screen.findAllByText('Northbridge')).length).toBeGreaterThan(0);
@@ -124,7 +148,7 @@ describe('dashboard', () => {
     expect(screen.getByText('Score moved to 1–0')).toBeInTheDocument();
     expect(screen.getByText(goalEvent.event_id)).toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([input]) => String(input).endsWith('/narratives'))).toBe(false);
-    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('checkbox', { name: /Score moved to 1–0/ }));
     fireEvent.click(screen.getByRole('button', { name: /generate match narrative/i }));
     expect(await screen.findByText('The home side scored, changing the score from 0–0 to 1–0.')).toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([input, init]) => String(input).endsWith('/narratives') && init?.method === 'POST')).toBe(true);
@@ -133,20 +157,144 @@ describe('dashboard', () => {
   it('deduplicates replayed SSE events and reports reconnect state', async () => {
     setupNetwork();
     render(<App />);
-    fireEvent.change(screen.getByLabelText('Connect to a local match'), { target: { value: 'demo-match' } });
+    fireEvent.change(screen.getByLabelText('Connect to an existing local match'), { target: { value: 'demo-match' } });
     fireEvent.click(screen.getByRole('button', { name: /connect/i }));
     await screen.findByText('Live feed connected');
+    const earlierEvent = shotEvent;
     latestSource.emit(goalEvent);
+    latestSource.emit(earlierEvent);
     latestSource.emit(goalEvent);
-    await waitFor(() => expect(document.querySelectorAll('.timeline-item')).toHaveLength(1));
+    await waitFor(() => expect(document.querySelectorAll('.timeline-item')).toHaveLength(3));
+    expect([...document.querySelectorAll('.event-sequence')].map((node) => node.textContent)).toEqual(['004', '003', '002']);
     expect(screen.getByText('Live feed connected')).toBeInTheDocument();
+  });
+
+  it('merges paginated finalized history through the watermark before completing a 61-event timeline', async () => {
+    const matchId = 'demo-match';
+    const events = Array.from({ length: 62 }, (_, index) => {
+      const sequence = index + 1;
+      return {
+        ...startEvent,
+        event_id: `${'a'.repeat(32)}:${sequence}`,
+        sequence,
+        type: sequence === 1 ? 'match_start' : sequence === 62 ? 'full_time' : 'pass',
+        outcome: sequence === 1 ? 'started' : sequence === 62 ? 'ended' : 'completed',
+        clock: { match_elapsed_ms: sequence * 60_000, period_elapsed_ms: sequence * 60_000, period: 'second_half' },
+        data: sequence === 1 ? startEvent.data : {},
+      } satisfies MatchEvent;
+    });
+    const finalizedState = {
+      ...state,
+      match_id: matchId,
+      status: 'ended',
+      period: 'second_half',
+      last_accepted_sequence: 62,
+      last_finalized_sequence: 62,
+      clock: { match_elapsed_ms: 62 * 60_000, period_elapsed_ms: 31 * 60_000 },
+    };
+    const finalSnapshot = { sequence: 62, event_id: events[61].event_id, match_elapsed_ms: 62 * 60_000 };
+    const finalIntelligence = {
+      ...intelligence,
+      match_id: matchId,
+      as_of: finalSnapshot,
+      metric_snapshot: { ...intelligence.metric_snapshot, match_id: matchId, as_of: finalSnapshot },
+      insights: intelligence.insights.map((insight) => ({ ...insight, match_id: matchId })),
+    };
+    let stateRequests = 0;
+    const requestedCursors: number[] = [];
+    vi.stubGlobal('EventSource', class extends FakeEventSource {
+      constructor() { super(); latestSource = this; queueMicrotask(() => { this.readyState = FakeEventSource.OPEN; this.onopen?.(); }); }
+    });
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), 'http://localhost');
+      if (url.pathname.endsWith('/state')) {
+        stateRequests += 1;
+        const body = stateRequests === 1
+          ? { ...state, match_id: matchId, last_accepted_sequence: 2, last_finalized_sequence: 2 }
+          : finalizedState;
+        return { ok: true, status: 200, json: async () => body } as Response;
+      }
+      if (url.pathname.endsWith('/events')) {
+        const after = Number(url.searchParams.get('after_sequence'));
+        requestedCursors.push(after);
+        const page = events.filter((event) => event.sequence > after).slice(0, 25);
+        return { ok: true, status: 200, json: async () => ({
+          events: page,
+          next_after_sequence: page.at(-1)?.sequence ?? after,
+        }) } as Response;
+      }
+      if (url.pathname.endsWith('/intelligence')) {
+        return { ok: true, status: 200, json: async () => finalIntelligence } as Response;
+      }
+      throw new Error(`Unexpected request ${url.pathname}`);
+    }));
+
+    render(<App />);
+    fireEvent.change(screen.getByLabelText('Connect to an existing local match'), { target: { value: matchId } });
+    fireEvent.click(screen.getByRole('button', { name: /connect/i }));
+    await screen.findByText('Live feed connected');
+    await waitFor(() => expect(screen.getByText('1 events')).toBeInTheDocument());
+
+    latestSource.emit(events[2]);
+    await waitFor(() => expect(document.querySelectorAll('.timeline-item')).toHaveLength(2));
+    latestSource.emit(events[61]);
+
+    await waitFor(() => expect(screen.getByText('Match finalized')).toBeInTheDocument());
+    expect(screen.getByText('61 events')).toBeInTheDocument();
+    const sequences = [...document.querySelectorAll('.event-sequence')].map((node) => node.textContent);
+    expect(sequences).toHaveLength(61);
+    expect(sequences[0]).toBe('062');
+    expect(sequences.at(-1)).toBe('002');
+    expect(new Set(sequences).size).toBe(61);
+    expect(requestedCursors).toEqual([0, 3, 28, 53]);
+  });
+
+  it('creates a match from the selected controls and connects the dashboard automatically', async () => {
+    const fetchMock = setupNetwork();
+    render(<App />);
+    fireEvent.change(screen.getByLabelText('Scenario'), { target: { value: 'late_comeback' } });
+    fireEvent.change(screen.getByLabelText('Seed'), { target: { value: '29' } });
+    fireEvent.change(screen.getByLabelText('Playback speed (standard mode)'), { target: { value: '20' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create & Play Match' }));
+    expect(await screen.findByText('Live feed connected')).toBeInTheDocument();
+    const startCall = fetchMock.mock.calls.find(([input, init]) => String(input).endsWith('/api/demo/playbacks') && init?.method === 'POST');
+    expect(startCall).toBeDefined();
+    const body = JSON.parse(String(startCall?.[1]?.body));
+    expect(body).toMatchObject({ scenario: 'late_comeback', seed: 29, speed: 20, fast_demo: true });
+    expect(body.request_id).toMatch(/^[0-9a-f-]{36}$/);
+    const matchId = `demo-${'e'.repeat(32)}`;
+    await waitFor(() => expect(fetchMock.mock.calls.some(([input]) => String(input).includes(`/api/matches/${matchId}/state`))).toBe(true));
+    await waitFor(() => expect(document.querySelector('.scenario-chip')).toHaveTextContent('Late comeback'));
+  });
+
+  it('keeps standard playback speeds available when Demo Fast Playback is disabled', async () => {
+    const fetchMock = setupNetwork();
+    render(<App />);
+    fireEvent.click(screen.getByLabelText(/Demo Fast Playback/i));
+    fireEvent.change(screen.getByLabelText('Playback speed (standard mode)'), { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create & Play Match' }));
+    await screen.findByText('Live feed connected');
+    const startCall = fetchMock.mock.calls.find(([input, init]) => String(input).endsWith('/api/demo/playbacks') && init?.method === 'POST');
+    expect(JSON.parse(String(startCall?.[1]?.body))).toMatchObject({ speed: 5, fast_demo: false });
+  });
+
+  it('shows a safe startup error and stays disconnected when playback capacity is full', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: false,
+      status: 409,
+      json: async () => ({ error: { code: 'demo_playback_capacity', message: 'a synthetic demo playback is already active' } }),
+    }) as unknown as Response));
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Create & Play Match' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('a synthetic demo playback is already active');
+    expect(screen.getByText('AWAITING MATCH')).toBeInTheDocument();
   });
 
   it('renders safe API failures and a terminal playback command', async () => {
     setupNetwork();
     render(<App />);
     expect(document.querySelector('.command-line')).toHaveTextContent('PYTHONPATH=src .venv/bin/python -m matchpulse_sim play --scenario balanced --seed 17 --speed 10');
-    fireEvent.change(screen.getByLabelText('Connect to a local match'), { target: { value: 'missing' } });
+    fireEvent.change(screen.getByLabelText('Connect to an existing local match'), { target: { value: 'missing' } });
     fireEvent.click(screen.getByRole('button', { name: /connect/i }));
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
   });

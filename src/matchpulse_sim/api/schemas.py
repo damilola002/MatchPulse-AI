@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 
 class StartMatchRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -13,6 +12,32 @@ class StartMatchRequest(BaseModel):
 class EventBatchRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     events: list[dict[str, Any]] = Field(min_length=1)
+
+
+class DemoPlaybackRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    request_id: StrictStr = Field(pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+    scenario: Literal[
+        "balanced",
+        "late_comeback",
+        "sustained_pressure",
+        "low_event_defensive",
+    ]
+    # The persisted match seed uses a signed BIGINT on PostgreSQL and SQLite.
+    seed: StrictInt = Field(ge=0, le=(1 << 63) - 1)
+    speed: Literal[1, 5, 10, 20]
+    fast_demo: StrictBool = False
+
+
+class DemoPlaybackResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    request_id: str
+    match_id: str
+    status: Literal["starting", "running", "completed", "failed"]
+    duplicate: bool = False
+    error: str | None = None
 
 
 class ErrorDetail(BaseModel):

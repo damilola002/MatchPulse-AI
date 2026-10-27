@@ -79,6 +79,14 @@ export type NarrativeResponse = {
   blocks: { claim_ids: string[]; insight_ids: string[]; evidence_event_ids: string[]; text: string }[];
 };
 
+export type DemoPlayback = {
+  request_id: string;
+  match_id: string;
+  status: 'starting' | 'running' | 'completed' | 'failed';
+  duplicate: boolean;
+  error: string | null;
+};
+
 export class ApiError extends Error {
   constructor(message: string, readonly code: string, readonly status: number) { super(message); }
 }
@@ -162,9 +170,18 @@ export async function fetchMatchState(matchId: string, signal?: AbortSignal): Pr
   return parseMatchState(await request<unknown>(`/api/matches/${encodeURIComponent(matchId)}/state`, signal));
 }
 
-export async function fetchEventHistory(matchId: string, finalizedSequence: number, signal?: AbortSignal): Promise<MatchEvent[]> {
+export async function fetchEventHistory(
+  matchId: string,
+  finalizedSequence: number,
+  signal?: AbortSignal,
+  afterSequence = 0,
+): Promise<MatchEvent[]> {
+  if (!Number.isSafeInteger(finalizedSequence) || finalizedSequence < 0
+    || !Number.isSafeInteger(afterSequence) || afterSequence < 0 || afterSequence > finalizedSequence) {
+    throw new ApiError('Finalized event history bounds are invalid', 'invalid_event_history_bounds', 502);
+  }
   const found: MatchEvent[] = [];
-  let after = 0;
+  let after = afterSequence;
   for (let page = 0; page < 100 && after < finalizedSequence; page += 1) {
     const result = await request<{ events: unknown[]; next_after_sequence: number }>(
       `/api/matches/${encodeURIComponent(matchId)}/events?after_sequence=${after}&limit=100`, signal,
@@ -174,11 +191,45 @@ export async function fetchEventHistory(matchId: string, finalizedSequence: numb
     if (result.next_after_sequence <= after || result.events.length === 0) break;
     after = result.next_after_sequence;
   }
+  const expectedCount = finalizedSequence - afterSequence;
+  if (after < finalizedSequence || found.length !== expectedCount
+    || found.some((event, index) => event.sequence !== afterSequence + index + 1)) {
+    throw new ApiError(
+      'Finalized event history did not reach the requested sequence watermark',
+      'incomplete_event_history',
+      502,
+    );
+  }
   return mergeEvents([], found, finalizedSequence);
 }
 
 export async function fetchIntelligence(matchId: string, signal?: AbortSignal): Promise<IntelligenceResponse> {
   return parseIntelligence(await request<unknown>(`/api/matches/${encodeURIComponent(matchId)}/intelligence?limit=100`, signal));
+}
+
+function parseDemoPlayback(value: unknown): DemoPlayback {
+  if (!isObject(value) || typeof value.request_id !== 'string'
+    || typeof value.match_id !== 'string' || !/^demo-[0-9a-f]{32}$/.test(value.match_id)
+    || !['starting', 'running', 'completed', 'failed'].includes(String(value.status))
+    || typeof value.duplicate !== 'boolean'
+    || !(value.error === null || typeof value.error === 'string')) {
+    throw new ApiError('Demo playback response is invalid', 'invalid_response', 502);
+  }
+  return value as unknown as DemoPlayback;
+}
+
+export async function createDemoPlayback(
+  options: { request_id: string; scenario: string; seed: number; speed: number; fast_demo: boolean }, signal?: AbortSignal,
+): Promise<DemoPlayback> {
+  return parseDemoPlayback(await request<unknown>('/api/demo/playbacks', signal, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(options),
+  }));
+}
+
+export async function fetchDemoPlayback(requestId: string, signal?: AbortSignal): Promise<DemoPlayback> {
+  return parseDemoPlayback(await request<unknown>(`/api/demo/playbacks/${encodeURIComponent(requestId)}`, signal));
 }
 
 export async function generateNarrative(matchId: string, intelligence: IntelligenceResponse, insightIds: string[], signal?: AbortSignal): Promise<NarrativeResponse> {

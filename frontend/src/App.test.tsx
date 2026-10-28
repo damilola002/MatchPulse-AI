@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
+import { ReadOnlyDemo } from './ReadOnlyDemo';
+import staticFixture from './demo-fixture.json';
 import { generateNarrative, mergeEvents, parseIntelligence, type IntelligenceResponse, type MatchEvent } from './api';
 
 const state = {
@@ -102,7 +104,10 @@ function setupNetwork() {
   return fetchMock;
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
 
 describe('dashboard', () => {
   it('validates API payload contracts and merges finalized SSE events by exact identity and sequence', () => {
@@ -297,5 +302,58 @@ describe('dashboard', () => {
     fireEvent.change(screen.getByLabelText('Connect to an existing local match'), { target: { value: 'missing' } });
     fireEvent.click(screen.getByRole('button', { name: /connect/i }));
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+  });
+});
+
+describe('production read-only synthetic demo', () => {
+  it('renders the completed final scoreboard and required snapshot label', () => {
+    vi.stubEnv('PROD', true);
+    render(<App />);
+    expect(screen.getByText('Read-only synthetic demo · Completed match snapshot · Not live or official Premier League data')).toBeInTheDocument();
+    expect(screen.getByText('Harbor United')).toBeInTheDocument();
+    expect(screen.getByText('Cedar Athletic')).toBeInTheDocument();
+    expect(document.querySelector('.score')).toHaveTextContent('2:3');
+    expect(screen.getByText('FINAL SCORE')).toBeInTheDocument();
+  });
+
+  it('renders every fixture event once in chronological sequence', () => {
+    render(<ReadOnlyDemo />);
+    const sequences = [...document.querySelectorAll<HTMLElement>('.timeline-item')]
+      .map((item) => Number(item.dataset.sequence));
+    expect(sequences).toEqual(staticFixture.events.map((event) => event.sequence));
+    expect(sequences).toHaveLength(staticFixture.state.last_finalized_sequence);
+  });
+
+  it('resolves every insight evidence ID to an event shown in the timeline', () => {
+    render(<ReadOnlyDemo />);
+    const displayedIds = new Set(staticFixture.events.map((event) => event.event_id));
+    for (const insight of staticFixture.intelligence.insights) {
+      for (const evidenceId of insight.evidence_event_ids) {
+        expect(displayedIds.has(evidenceId), `${evidenceId} should be in the fixture`).toBe(true);
+        expect(screen.getAllByText(evidenceId).length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('labels the fixed narrative as pre-generated deterministic output', () => {
+    render(<ReadOnlyDemo />);
+    expect(screen.getByText('PRE-GENERATED SYNTHETIC NARRATIVE')).toBeInTheDocument();
+    expect(screen.getByText('PRE-GENERATED · DETERMINISTIC-FAKE · NO LIVE AI REQUEST')).toBeInTheDocument();
+    for (const block of staticFixture.narrative.blocks) expect(screen.getByText(block.text)).toBeInTheDocument();
+  });
+
+  it('exposes no mutation controls and makes no backend or SSE requests', () => {
+    const fetchMock = vi.fn();
+    const eventSourceMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('EventSource', eventSourceMock);
+    vi.stubEnv('PROD', true);
+    render(<App />);
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Create & Play Match|Generate Match Narrative|playback/i)).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(eventSourceMock).not.toHaveBeenCalled();
   });
 });

@@ -11,6 +11,7 @@ export type MatchState = {
   shots: Record<string, number>;
   last_accepted_sequence: number;
   last_finalized_sequence: number;
+  last_finalized_event_id: string | null;
   state_version: number;
   transition_pending: boolean;
 };
@@ -67,6 +68,7 @@ export type IntelligenceResponse = {
   next_cursor: string | null;
 };
 export type NarrativeResponse = {
+  schema_version: 1;
   narrative_id: string;
   narrative_kind: string;
   language: string;

@@ -15,6 +15,7 @@ import {
   type MatchState,
   type NarrativeResponse,
 } from './api';
+import { ReadOnlyDemo } from './ReadOnlyDemo';
 
 type Connection = 'idle' | 'connecting' | 'live' | 'reconnecting' | 'disconnected' | 'finalized';
 const scenarioLabels: Record<string, string> = {
@@ -58,6 +59,11 @@ function contiguousSequence(events: MatchEvent[], watermark: number): number {
 }
 
 export function App() {
+  if (import.meta.env.PROD) return <ReadOnlyDemo />;
+  return <InteractiveDashboard />;
+}
+
+function InteractiveDashboard() {
   const [matchInput, setMatchInput] = useState('');
   const [matchId, setMatchId] = useState('');
   const [connection, setConnection] = useState<Connection>('idle');

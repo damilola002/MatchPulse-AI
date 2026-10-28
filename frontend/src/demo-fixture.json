@@ -1,0 +1,2372 @@
+{
+  "state": {
+    "match_id": "mp-static-demo-20261027",
+    "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+    "scenario_id": "late_comeback",
+    "synthetic": true,
+    "status": "ended",
+    "period": "second_half",
+    "clock": {
+      "match_elapsed_ms": 5700000,
+      "period_elapsed_ms": 2880000
+    },
+    "score": {
+      "home": 2,
+      "away": 3
+    },
+    "current_possession_team_id": null,
+    "shots": {
+      "home": 4,
+      "away": 4
+    },
+    "last_accepted_sequence": 56,
+    "last_accepted_event_id": "422e3b674405c1fad8e94278f3cd60ce:56",
+    "last_accepted_match_elapsed_ms": 5700000,
+    "last_finalized_sequence": 56,
+    "last_finalized_event_id": "422e3b674405c1fad8e94278f3cd60ce:56",
+    "state_version": 56,
+    "transition_pending": false
+  },
+  "events": [
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:1",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 1,
+      "clock": {
+        "match_elapsed_ms": 0,
+        "period": "first_half",
+        "period_elapsed_ms": 0
+      },
+      "type": "match_start",
+      "team_id": null,
+      "player_id": null,
+      "location": null,
+      "outcome": "started",
+      "causal_event_ids": [],
+      "data": {
+        "home_team": {
+          "team_id": "harbor-united",
+          "name": "Harbor United",
+          "players": [
+            {
+              "player_id": "harbor-01",
+              "name": "Ari Vale"
+            },
+            {
+              "player_id": "harbor-02",
+              "name": "Noah Reed"
+            },
+            {
+              "player_id": "harbor-03",
+              "name": "Mika Stone"
+            },
+            {
+              "player_id": "harbor-04",
+              "name": "Ira Cole"
+            },
+            {
+              "player_id": "harbor-05",
+              "name": "Sam Rowan"
+            },
+            {
+              "player_id": "harbor-06",
+              "name": "Levi North"
+            }
+          ]
+        },
+        "away_team": {
+          "team_id": "cedar-athletic",
+          "name": "Cedar Athletic",
+          "players": [
+            {
+              "player_id": "cedar-01",
+              "name": "Remy Ash"
+            },
+            {
+              "player_id": "cedar-02",
+              "name": "Tavi Brook"
+            },
+            {
+              "player_id": "cedar-03",
+              "name": "Eli Moss"
+            },
+            {
+              "player_id": "cedar-04",
+              "name": "Jules Hart"
+            },
+            {
+              "player_id": "cedar-05",
+              "name": "Rory Vale"
+            },
+            {
+              "player_id": "cedar-06",
+              "name": "Asha Lake"
+            }
+          ]
+        },
+        "kickoff_team_id": "harbor-united",
+        "first_half_regulation_ms": 2700000,
+        "first_half_stoppage_ms": 120000,
+        "second_half_regulation_ms": 2700000,
+        "second_half_stoppage_ms": 180000
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:2",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 2,
+      "clock": {
+        "match_elapsed_ms": 0,
+        "period": "first_half",
+        "period_elapsed_ms": 0
+      },
+      "type": "possession_change",
+      "team_id": "harbor-united",
+      "player_id": null,
+      "location": null,
+      "outcome": "gained_control",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:1"
+      ],
+      "data": {
+        "from_team_id": null,
+        "to_team_id": "harbor-united",
+        "reason": "kickoff",
+        "cause_event_id": "422e3b674405c1fad8e94278f3cd60ce:1"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:3",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 3,
+      "clock": {
+        "match_elapsed_ms": 480000,
+        "period": "first_half",
+        "period_elapsed_ms": 480000
+      },
+      "type": "pass",
+      "team_id": "harbor-united",
+      "player_id": "harbor-03",
+      "location": {
+        "x": 23,
+        "y": 8
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "harbor-06",
+        "end_location": {
+          "x": 44,
+          "y": 51
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:4",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 4,
+      "clock": {
+        "match_elapsed_ms": 480000,
+        "period": "first_half",
+        "period_elapsed_ms": 480000
+      },
+      "type": "pass",
+      "team_id": "harbor-united",
+      "player_id": "harbor-06",
+      "location": {
+        "x": 95,
+        "y": 46
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "harbor-04",
+        "end_location": {
+          "x": 31,
+          "y": 19
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:5",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 5,
+      "clock": {
+        "match_elapsed_ms": 480000,
+        "period": "first_half",
+        "period_elapsed_ms": 480000
+      },
+      "type": "pressure",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-02",
+      "location": {
+        "x": 12,
+        "y": 68
+      },
+      "outcome": "applied",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:4"
+      ],
+      "data": {
+        "target_player_id": "harbor-04"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:6",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 6,
+      "clock": {
+        "match_elapsed_ms": 480000,
+        "period": "first_half",
+        "period_elapsed_ms": 480000
+      },
+      "type": "shot",
+      "team_id": "harbor-united",
+      "player_id": "harbor-04",
+      "location": {
+        "x": 87,
+        "y": 86
+      },
+      "outcome": "goal",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:4",
+        "422e3b674405c1fad8e94278f3cd60ce:5"
+      ],
+      "data": {
+        "shot_subtype": "open_play",
+        "target_location": {
+          "x": 100,
+          "y": 65
+        },
+        "rebound_available": false
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:7",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 7,
+      "clock": {
+        "match_elapsed_ms": 480000,
+        "period": "first_half",
+        "period_elapsed_ms": 480000
+      },
+      "type": "goal",
+      "team_id": "harbor-united",
+      "player_id": "harbor-04",
+      "location": null,
+      "outcome": "scored",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:6"
+      ],
+      "data": {
+        "source_shot_event_id": "422e3b674405c1fad8e94278f3cd60ce:6",
+        "scoring_team_id": "harbor-united",
+        "scorer_player_id": "harbor-04"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:8",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 8,
+      "clock": {
+        "match_elapsed_ms": 480000,
+        "period": "first_half",
+        "period_elapsed_ms": 480000
+      },
+      "type": "possession_change",
+      "team_id": "cedar-athletic",
+      "player_id": null,
+      "location": null,
+      "outcome": "restart",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:7"
+      ],
+      "data": {
+        "from_team_id": "harbor-united",
+        "to_team_id": "cedar-athletic",
+        "reason": "goal_restart",
+        "cause_event_id": "422e3b674405c1fad8e94278f3cd60ce:7"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:9",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 9,
+      "clock": {
+        "match_elapsed_ms": 1320000,
+        "period": "first_half",
+        "period_elapsed_ms": 1320000
+      },
+      "type": "pass",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-01",
+      "location": {
+        "x": 13,
+        "y": 19
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "cedar-03",
+        "end_location": {
+          "x": 25,
+          "y": 80
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:10",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 10,
+      "clock": {
+        "match_elapsed_ms": 1320000,
+        "period": "first_half",
+        "period_elapsed_ms": 1320000
+      },
+      "type": "pass",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-03",
+      "location": {
+        "x": 42,
+        "y": 37
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "cedar-05",
+        "end_location": {
+          "x": 10,
+          "y": 78
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:11",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 11,
+      "clock": {
+        "match_elapsed_ms": 1320000,
+        "period": "first_half",
+        "period_elapsed_ms": 1320000
+      },
+      "type": "pressure",
+      "team_id": "harbor-united",
+      "player_id": "harbor-06",
+      "location": {
+        "x": 83,
+        "y": 21
+      },
+      "outcome": "applied",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:10"
+      ],
+      "data": {
+        "target_player_id": "cedar-05"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:12",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 12,
+      "clock": {
+        "match_elapsed_ms": 1320000,
+        "period": "first_half",
+        "period_elapsed_ms": 1320000
+      },
+      "type": "shot",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-05",
+      "location": {
+        "x": 13,
+        "y": 2
+      },
+      "outcome": "goal",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:10",
+        "422e3b674405c1fad8e94278f3cd60ce:11"
+      ],
+      "data": {
+        "shot_subtype": "open_play",
+        "target_location": {
+          "x": 0,
+          "y": 45
+        },
+        "rebound_available": false
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:13",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 13,
+      "clock": {
+        "match_elapsed_ms": 1320000,
+        "period": "first_half",
+        "period_elapsed_ms": 1320000
+      },
+      "type": "goal",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-05",
+      "location": null,
+      "outcome": "scored",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:12"
+      ],
+      "data": {
+        "source_shot_event_id": "422e3b674405c1fad8e94278f3cd60ce:12",
+        "scoring_team_id": "cedar-athletic",
+        "scorer_player_id": "cedar-05"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:14",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 14,
+      "clock": {
+        "match_elapsed_ms": 1320000,
+        "period": "first_half",
+        "period_elapsed_ms": 1320000
+      },
+      "type": "possession_change",
+      "team_id": "harbor-united",
+      "player_id": null,
+      "location": null,
+      "outcome": "restart",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:13"
+      ],
+      "data": {
+        "from_team_id": "cedar-athletic",
+        "to_team_id": "harbor-united",
+        "reason": "goal_restart",
+        "cause_event_id": "422e3b674405c1fad8e94278f3cd60ce:13"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:15",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 15,
+      "clock": {
+        "match_elapsed_ms": 2340000,
+        "period": "first_half",
+        "period_elapsed_ms": 2340000
+      },
+      "type": "pass",
+      "team_id": "harbor-united",
+      "player_id": "harbor-06",
+      "location": {
+        "x": 24,
+        "y": 31
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "harbor-05",
+        "end_location": {
+          "x": 87,
+          "y": 44
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:16",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 16,
+      "clock": {
+        "match_elapsed_ms": 2340000,
+        "period": "first_half",
+        "period_elapsed_ms": 2340000
+      },
+      "type": "pressure",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-05",
+      "location": {
+        "x": 29,
+        "y": 23
+      },
+      "outcome": "applied",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:15"
+      ],
+      "data": {
+        "target_player_id": "harbor-05"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:17",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 17,
+      "clock": {
+        "match_elapsed_ms": 2340000,
+        "period": "first_half",
+        "period_elapsed_ms": 2340000
+      },
+      "type": "foul",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-03",
+      "location": {
+        "x": 43,
+        "y": 38
+      },
+      "outcome": "whistled",
+      "causal_event_ids": [],
+      "data": {
+        "fouled_team_id": "harbor-united",
+        "fouled_player_id": "harbor-05",
+        "awarded_team_id": "harbor-united"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:18",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 18,
+      "clock": {
+        "match_elapsed_ms": 2340000,
+        "period": "first_half",
+        "period_elapsed_ms": 2340000
+      },
+      "type": "shot",
+      "team_id": "harbor-united",
+      "player_id": "harbor-05",
+      "location": {
+        "x": 91,
+        "y": 20
+      },
+      "outcome": "off_target",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:15",
+        "422e3b674405c1fad8e94278f3cd60ce:16"
+      ],
+      "data": {
+        "shot_subtype": "open_play",
+        "target_location": {
+          "x": 100,
+          "y": 96
+        },
+        "rebound_available": false
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:19",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 19,
+      "clock": {
+        "match_elapsed_ms": 2340000,
+        "period": "first_half",
+        "period_elapsed_ms": 2340000
+      },
+      "type": "possession_change",
+      "team_id": "cedar-athletic",
+      "player_id": null,
+      "location": null,
+      "outcome": "gained_control",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:18"
+      ],
+      "data": {
+        "from_team_id": "harbor-united",
+        "to_team_id": "cedar-athletic",
+        "reason": "shot",
+        "cause_event_id": "422e3b674405c1fad8e94278f3cd60ce:18"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:20",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 20,
+      "clock": {
+        "match_elapsed_ms": 2820000,
+        "period": "first_half",
+        "period_elapsed_ms": 2820000
+      },
+      "type": "possession_change",
+      "team_id": null,
+      "player_id": null,
+      "location": null,
+      "outcome": "dead_ball",
+      "causal_event_ids": [],
+      "data": {
+        "from_team_id": "cedar-athletic",
+        "to_team_id": null,
+        "reason": "period_boundary",
+        "cause_event_id": null
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:21",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 21,
+      "clock": {
+        "match_elapsed_ms": 2820000,
+        "period": "first_half",
+        "period_elapsed_ms": 2820000
+      },
+      "type": "half_time",
+      "team_id": null,
+      "player_id": null,
+      "location": null,
+      "outcome": "half_time",
+      "causal_event_ids": [],
+      "data": {},
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:22",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 22,
+      "clock": {
+        "match_elapsed_ms": 2820000,
+        "period": "second_half",
+        "period_elapsed_ms": 0
+      },
+      "type": "second_half_start",
+      "team_id": null,
+      "player_id": null,
+      "location": null,
+      "outcome": "started",
+      "causal_event_ids": [],
+      "data": {},
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:23",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 23,
+      "clock": {
+        "match_elapsed_ms": 2820000,
+        "period": "second_half",
+        "period_elapsed_ms": 0
+      },
+      "type": "possession_change",
+      "team_id": "cedar-athletic",
+      "player_id": null,
+      "location": null,
+      "outcome": "gained_control",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:22"
+      ],
+      "data": {
+        "from_team_id": null,
+        "to_team_id": "cedar-athletic",
+        "reason": "kickoff",
+        "cause_event_id": "422e3b674405c1fad8e94278f3cd60ce:22"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:24",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 24,
+      "clock": {
+        "match_elapsed_ms": 3360000,
+        "period": "second_half",
+        "period_elapsed_ms": 540000
+      },
+      "type": "tackle",
+      "team_id": "harbor-united",
+      "player_id": "harbor-03",
+      "location": {
+        "x": 16,
+        "y": 73
+      },
+      "outcome": "won",
+      "causal_event_ids": [],
+      "data": {
+        "opponent_player_id": "cedar-05"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:25",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 25,
+      "clock": {
+        "match_elapsed_ms": 3360000,
+        "period": "second_half",
+        "period_elapsed_ms": 540000
+      },
+      "type": "possession_change",
+      "team_id": "harbor-united",
+      "player_id": null,
+      "location": null,
+      "outcome": "gained_control",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:24"
+      ],
+      "data": {
+        "from_team_id": "cedar-athletic",
+        "to_team_id": "harbor-united",
+        "reason": "tackle",
+        "cause_event_id": "422e3b674405c1fad8e94278f3cd60ce:24"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:26",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 26,
+      "clock": {
+        "match_elapsed_ms": 3360000,
+        "period": "second_half",
+        "period_elapsed_ms": 540000
+      },
+      "type": "pass",
+      "team_id": "harbor-united",
+      "player_id": "harbor-06",
+      "location": {
+        "x": 74,
+        "y": 4
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "harbor-04",
+        "end_location": {
+          "x": 32,
+          "y": 63
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:27",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 27,
+      "clock": {
+        "match_elapsed_ms": 3360000,
+        "period": "second_half",
+        "period_elapsed_ms": 540000
+      },
+      "type": "pass",
+      "team_id": "harbor-united",
+      "player_id": "harbor-04",
+      "location": {
+        "x": 25,
+        "y": 51
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "harbor-05",
+        "end_location": {
+          "x": 64,
+          "y": 84
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:28",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 28,
+      "clock": {
+        "match_elapsed_ms": 3360000,
+        "period": "second_half",
+        "period_elapsed_ms": 540000
+      },
+      "type": "pressure",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-03",
+      "location": {
+        "x": 70,
+        "y": 23
+      },
+      "outcome": "applied",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:27"
+      ],
+      "data": {
+        "target_player_id": "harbor-05"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:29",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 29,
+      "clock": {
+        "match_elapsed_ms": 3360000,
+        "period": "second_half",
+        "period_elapsed_ms": 540000
+      },
+      "type": "shot",
+      "team_id": "harbor-united",
+      "player_id": "harbor-05",
+      "location": {
+        "x": 6,
+        "y": 53
+      },
+      "outcome": "saved",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:27",
+        "422e3b674405c1fad8e94278f3cd60ce:28"
+      ],
+      "data": {
+        "shot_subtype": "open_play",
+        "target_location": {
+          "x": 0,
+          "y": 89
+        },
+        "rebound_available": false
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:30",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 30,
+      "clock": {
+        "match_elapsed_ms": 3360000,
+        "period": "second_half",
+        "period_elapsed_ms": 540000
+      },
+      "type": "possession_change",
+      "team_id": "cedar-athletic",
+      "player_id": null,
+      "location": null,
+      "outcome": "gained_control",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:29"
+      ],
+      "data": {
+        "from_team_id": "harbor-united",
+        "to_team_id": "cedar-athletic",
+        "reason": "shot",
+        "cause_event_id": "422e3b674405c1fad8e94278f3cd60ce:29"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:31",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 31,
+      "clock": {
+        "match_elapsed_ms": 4020000,
+        "period": "second_half",
+        "period_elapsed_ms": 1200000
+      },
+      "type": "pass",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-02",
+      "location": {
+        "x": 93,
+        "y": 39
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "cedar-01",
+        "end_location": {
+          "x": 88,
+          "y": 32
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:32",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 32,
+      "clock": {
+        "match_elapsed_ms": 4020000,
+        "period": "second_half",
+        "period_elapsed_ms": 1200000
+      },
+      "type": "pressure",
+      "team_id": "harbor-united",
+      "player_id": "harbor-04",
+      "location": {
+        "x": 56,
+        "y": 84
+      },
+      "outcome": "applied",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:31"
+      ],
+      "data": {
+        "target_player_id": "cedar-01"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:33",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 33,
+      "clock": {
+        "match_elapsed_ms": 4020000,
+        "period": "second_half",
+        "period_elapsed_ms": 1200000
+      },
+      "type": "shot",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-01",
+      "location": {
+        "x": 96,
+        "y": 88
+      },
+      "outcome": "off_target",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:31",
+        "422e3b674405c1fad8e94278f3cd60ce:32"
+      ],
+      "data": {
+        "shot_subtype": "open_play",
+        "target_location": {
+          "x": 100,
+          "y": 18
+        },
+        "rebound_available": false
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:34",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 34,
+      "clock": {
+        "match_elapsed_ms": 4020000,
+        "period": "second_half",
+        "period_elapsed_ms": 1200000
+      },
+      "type": "possession_change",
+      "team_id": "harbor-united",
+      "player_id": null,
+      "location": null,
+      "outcome": "gained_control",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:33"
+      ],
+      "data": {
+        "from_team_id": "cedar-athletic",
+        "to_team_id": "harbor-united",
+        "reason": "shot",
+        "cause_event_id": "422e3b674405c1fad8e94278f3cd60ce:33"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:35",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 35,
+      "clock": {
+        "match_elapsed_ms": 4560000,
+        "period": "second_half",
+        "period_elapsed_ms": 1740000
+      },
+      "type": "pass",
+      "team_id": "harbor-united",
+      "player_id": "harbor-06",
+      "location": {
+        "x": 48,
+        "y": 73
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "harbor-01",
+        "end_location": {
+          "x": 79,
+          "y": 38
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:36",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 36,
+      "clock": {
+        "match_elapsed_ms": 4560000,
+        "period": "second_half",
+        "period_elapsed_ms": 1740000
+      },
+      "type": "pass",
+      "team_id": "harbor-united",
+      "player_id": "harbor-01",
+      "location": {
+        "x": 9,
+        "y": 11
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "harbor-04",
+        "end_location": {
+          "x": 70,
+          "y": 72
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:37",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 37,
+      "clock": {
+        "match_elapsed_ms": 4560000,
+        "period": "second_half",
+        "period_elapsed_ms": 1740000
+      },
+      "type": "pressure",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-04",
+      "location": {
+        "x": 57,
+        "y": 99
+      },
+      "outcome": "applied",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:36"
+      ],
+      "data": {
+        "target_player_id": "harbor-04"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:38",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 38,
+      "clock": {
+        "match_elapsed_ms": 4560000,
+        "period": "second_half",
+        "period_elapsed_ms": 1740000
+      },
+      "type": "shot",
+      "team_id": "harbor-united",
+      "player_id": "harbor-04",
+      "location": {
+        "x": 5,
+        "y": 61
+      },
+      "outcome": "goal",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:36",
+        "422e3b674405c1fad8e94278f3cd60ce:37"
+      ],
+      "data": {
+        "shot_subtype": "volley",
+        "target_location": {
+          "x": 0,
+          "y": 7
+        },
+        "rebound_available": false
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:39",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 39,
+      "clock": {
+        "match_elapsed_ms": 4560000,
+        "period": "second_half",
+        "period_elapsed_ms": 1740000
+      },
+      "type": "goal",
+      "team_id": "harbor-united",
+      "player_id": "harbor-04",
+      "location": null,
+      "outcome": "scored",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:38"
+      ],
+      "data": {
+        "source_shot_event_id": "422e3b674405c1fad8e94278f3cd60ce:38",
+        "scoring_team_id": "harbor-united",
+        "scorer_player_id": "harbor-04"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:40",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 40,
+      "clock": {
+        "match_elapsed_ms": 4560000,
+        "period": "second_half",
+        "period_elapsed_ms": 1740000
+      },
+      "type": "possession_change",
+      "team_id": "cedar-athletic",
+      "player_id": null,
+      "location": null,
+      "outcome": "restart",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:39"
+      ],
+      "data": {
+        "from_team_id": "harbor-united",
+        "to_team_id": "cedar-athletic",
+        "reason": "goal_restart",
+        "cause_event_id": "422e3b674405c1fad8e94278f3cd60ce:39"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:41",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 41,
+      "clock": {
+        "match_elapsed_ms": 5160000,
+        "period": "second_half",
+        "period_elapsed_ms": 2340000
+      },
+      "type": "pass",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-04",
+      "location": {
+        "x": 86,
+        "y": 75
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "cedar-01",
+        "end_location": {
+          "x": 59,
+          "y": 28
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:42",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 42,
+      "clock": {
+        "match_elapsed_ms": 5160000,
+        "period": "second_half",
+        "period_elapsed_ms": 2340000
+      },
+      "type": "pass",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-01",
+      "location": {
+        "x": 45,
+        "y": 6
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "cedar-06",
+        "end_location": {
+          "x": 65,
+          "y": 52
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:43",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 43,
+      "clock": {
+        "match_elapsed_ms": 5160000,
+        "period": "second_half",
+        "period_elapsed_ms": 2340000
+      },
+      "type": "pressure",
+      "team_id": "harbor-united",
+      "player_id": "harbor-03",
+      "location": {
+        "x": 10,
+        "y": 64
+      },
+      "outcome": "applied",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:42"
+      ],
+      "data": {
+        "target_player_id": "cedar-06"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:44",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 44,
+      "clock": {
+        "match_elapsed_ms": 5160000,
+        "period": "second_half",
+        "period_elapsed_ms": 2340000
+      },
+      "type": "shot",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-06",
+      "location": {
+        "x": 93,
+        "y": 37
+      },
+      "outcome": "goal",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:42",
+        "422e3b674405c1fad8e94278f3cd60ce:43"
+      ],
+      "data": {
+        "shot_subtype": "open_play",
+        "target_location": {
+          "x": 100,
+          "y": 94
+        },
+        "rebound_available": false
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:45",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 45,
+      "clock": {
+        "match_elapsed_ms": 5160000,
+        "period": "second_half",
+        "period_elapsed_ms": 2340000
+      },
+      "type": "goal",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-06",
+      "location": null,
+      "outcome": "scored",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:44"
+      ],
+      "data": {
+        "source_shot_event_id": "422e3b674405c1fad8e94278f3cd60ce:44",
+        "scoring_team_id": "cedar-athletic",
+        "scorer_player_id": "cedar-06"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:46",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 46,
+      "clock": {
+        "match_elapsed_ms": 5160000,
+        "period": "second_half",
+        "period_elapsed_ms": 2340000
+      },
+      "type": "possession_change",
+      "team_id": "harbor-united",
+      "player_id": null,
+      "location": null,
+      "outcome": "restart",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:45"
+      ],
+      "data": {
+        "from_team_id": "cedar-athletic",
+        "to_team_id": "harbor-united",
+        "reason": "goal_restart",
+        "cause_event_id": "422e3b674405c1fad8e94278f3cd60ce:45"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:47",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 47,
+      "clock": {
+        "match_elapsed_ms": 5460000,
+        "period": "second_half",
+        "period_elapsed_ms": 2640000
+      },
+      "type": "tackle",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-05",
+      "location": {
+        "x": 69,
+        "y": 5
+      },
+      "outcome": "won",
+      "causal_event_ids": [],
+      "data": {
+        "opponent_player_id": "harbor-06"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:48",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 48,
+      "clock": {
+        "match_elapsed_ms": 5460000,
+        "period": "second_half",
+        "period_elapsed_ms": 2640000
+      },
+      "type": "possession_change",
+      "team_id": "cedar-athletic",
+      "player_id": null,
+      "location": null,
+      "outcome": "gained_control",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:47"
+      ],
+      "data": {
+        "from_team_id": "harbor-united",
+        "to_team_id": "cedar-athletic",
+        "reason": "tackle",
+        "cause_event_id": "422e3b674405c1fad8e94278f3cd60ce:47"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:49",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 49,
+      "clock": {
+        "match_elapsed_ms": 5460000,
+        "period": "second_half",
+        "period_elapsed_ms": 2640000
+      },
+      "type": "pass",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-01",
+      "location": {
+        "x": 48,
+        "y": 25
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "cedar-04",
+        "end_location": {
+          "x": 55,
+          "y": 4
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:50",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 50,
+      "clock": {
+        "match_elapsed_ms": 5460000,
+        "period": "second_half",
+        "period_elapsed_ms": 2640000
+      },
+      "type": "pass",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-04",
+      "location": {
+        "x": 62,
+        "y": 99
+      },
+      "outcome": "completed",
+      "causal_event_ids": [],
+      "data": {
+        "receiver_player_id": "cedar-03",
+        "end_location": {
+          "x": 88,
+          "y": 7
+        }
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:51",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 51,
+      "clock": {
+        "match_elapsed_ms": 5460000,
+        "period": "second_half",
+        "period_elapsed_ms": 2640000
+      },
+      "type": "pressure",
+      "team_id": "harbor-united",
+      "player_id": "harbor-06",
+      "location": {
+        "x": 12,
+        "y": 71
+      },
+      "outcome": "applied",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:50"
+      ],
+      "data": {
+        "target_player_id": "cedar-03"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:52",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 52,
+      "clock": {
+        "match_elapsed_ms": 5460000,
+        "period": "second_half",
+        "period_elapsed_ms": 2640000
+      },
+      "type": "shot",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-03",
+      "location": {
+        "x": 83,
+        "y": 52
+      },
+      "outcome": "goal",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:50",
+        "422e3b674405c1fad8e94278f3cd60ce:51"
+      ],
+      "data": {
+        "shot_subtype": "volley",
+        "target_location": {
+          "x": 100,
+          "y": 78
+        },
+        "rebound_available": false
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:53",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 53,
+      "clock": {
+        "match_elapsed_ms": 5460000,
+        "period": "second_half",
+        "period_elapsed_ms": 2640000
+      },
+      "type": "goal",
+      "team_id": "cedar-athletic",
+      "player_id": "cedar-03",
+      "location": null,
+      "outcome": "scored",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:52"
+      ],
+      "data": {
+        "source_shot_event_id": "422e3b674405c1fad8e94278f3cd60ce:52",
+        "scoring_team_id": "cedar-athletic",
+        "scorer_player_id": "cedar-03"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:54",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 54,
+      "clock": {
+        "match_elapsed_ms": 5460000,
+        "period": "second_half",
+        "period_elapsed_ms": 2640000
+      },
+      "type": "possession_change",
+      "team_id": "harbor-united",
+      "player_id": null,
+      "location": null,
+      "outcome": "restart",
+      "causal_event_ids": [
+        "422e3b674405c1fad8e94278f3cd60ce:53"
+      ],
+      "data": {
+        "from_team_id": "cedar-athletic",
+        "to_team_id": "harbor-united",
+        "reason": "goal_restart",
+        "cause_event_id": "422e3b674405c1fad8e94278f3cd60ce:53"
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:55",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 55,
+      "clock": {
+        "match_elapsed_ms": 5700000,
+        "period": "second_half",
+        "period_elapsed_ms": 2880000
+      },
+      "type": "possession_change",
+      "team_id": null,
+      "player_id": null,
+      "location": null,
+      "outcome": "dead_ball",
+      "causal_event_ids": [],
+      "data": {
+        "from_team_id": "harbor-united",
+        "to_team_id": null,
+        "reason": "period_boundary",
+        "cause_event_id": null
+      },
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    },
+    {
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:56",
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "sequence": 56,
+      "clock": {
+        "match_elapsed_ms": 5700000,
+        "period": "second_half",
+        "period_elapsed_ms": 2880000
+      },
+      "type": "full_time",
+      "team_id": null,
+      "player_id": null,
+      "location": null,
+      "outcome": "full_time",
+      "causal_event_ids": [],
+      "data": {},
+      "provenance": {
+        "synthetic": true,
+        "generator": "matchpulse-sim",
+        "generator_version": "1.0.0",
+        "scenario_id": "late_comeback",
+        "seed": 20261027
+      }
+    }
+  ],
+  "intelligence": {
+    "match_id": "mp-static-demo-20261027",
+    "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+    "synthetic": true,
+    "as_of": {
+      "sequence": 56,
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:56",
+      "match_elapsed_ms": 5700000
+    },
+    "metric_snapshot": {
+      "schema_version": 1,
+      "match_id": "mp-static-demo-20261027",
+      "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+      "synthetic": true,
+      "metric_definition_version": "1.0.0",
+      "as_of": {
+        "sequence": 56,
+        "event_id": "422e3b674405c1fad8e94278f3cd60ce:56",
+        "match_elapsed_ms": 5700000
+      },
+      "teams": [
+        {
+          "team_id": "harbor-united",
+          "role": "home",
+          "metrics": {
+            "goals": {
+              "value": 2,
+              "unit": "goals",
+              "numerator": 2,
+              "denominator": 1
+            },
+            "shots": {
+              "value": 4,
+              "unit": "shots",
+              "numerator": 4,
+              "denominator": 1
+            },
+            "shot_outcomes": {
+              "goal": {
+                "value": 2,
+                "unit": "shots",
+                "numerator": 2,
+                "denominator": 1
+              },
+              "saved": {
+                "value": 1,
+                "unit": "shots",
+                "numerator": 1,
+                "denominator": 1
+              },
+              "blocked": {
+                "value": 0,
+                "unit": "shots",
+                "numerator": 0,
+                "denominator": 1
+              },
+              "off_target": {
+                "value": 1,
+                "unit": "shots",
+                "numerator": 1,
+                "denominator": 1
+              },
+              "woodwork": {
+                "value": 0,
+                "unit": "shots",
+                "numerator": 0,
+                "denominator": 1
+              }
+            },
+            "logged_pressure_events": {
+              "value": 4,
+              "unit": "events",
+              "numerator": 4,
+              "denominator": 1
+            },
+            "goals_per_shot": {
+              "value": "0.5000",
+              "unit": "goals_per_shot",
+              "numerator": 2,
+              "denominator": 4
+            }
+          }
+        },
+        {
+          "team_id": "cedar-athletic",
+          "role": "away",
+          "metrics": {
+            "goals": {
+              "value": 3,
+              "unit": "goals",
+              "numerator": 3,
+              "denominator": 1
+            },
+            "shots": {
+              "value": 4,
+              "unit": "shots",
+              "numerator": 4,
+              "denominator": 1
+            },
+            "shot_outcomes": {
+              "goal": {
+                "value": 3,
+                "unit": "shots",
+                "numerator": 3,
+                "denominator": 1
+              },
+              "saved": {
+                "value": 0,
+                "unit": "shots",
+                "numerator": 0,
+                "denominator": 1
+              },
+              "blocked": {
+                "value": 0,
+                "unit": "shots",
+                "numerator": 0,
+                "denominator": 1
+              },
+              "off_target": {
+                "value": 1,
+                "unit": "shots",
+                "numerator": 1,
+                "denominator": 1
+              },
+              "woodwork": {
+                "value": 0,
+                "unit": "shots",
+                "numerator": 0,
+                "denominator": 1
+              }
+            },
+            "logged_pressure_events": {
+              "value": 4,
+              "unit": "events",
+              "numerator": 4,
+              "denominator": 1
+            },
+            "goals_per_shot": {
+              "value": "0.7500",
+              "unit": "goals_per_shot",
+              "numerator": 3,
+              "denominator": 4
+            }
+          }
+        }
+      ]
+    },
+    "insights": [
+      {
+        "schema_version": 1,
+        "insight_id": "insight:v1:badd1df8bdeca544706c23d75d26121af65fdcf253ff319dfb60e67486275777",
+        "match_id": "mp-static-demo-20261027",
+        "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+        "synthetic": true,
+        "rule_id": "score_change",
+        "rule_version": "1.0.0",
+        "team_id": "harbor-united",
+        "period": "first_half",
+        "clock": {
+          "match_elapsed_ms": 480000,
+          "period_elapsed_ms": 480000
+        },
+        "trigger_event_id": "422e3b674405c1fad8e94278f3cd60ce:7",
+        "trigger_sequence": 7,
+        "window": null,
+        "observed_facts": {
+          "score_before": {
+            "home": 0,
+            "away": 0
+          },
+          "score_after": {
+            "home": 1,
+            "away": 0
+          }
+        },
+        "threshold": null,
+        "evidence_event_ids": [
+          "422e3b674405c1fad8e94278f3cd60ce:7"
+        ]
+      },
+      {
+        "schema_version": 1,
+        "insight_id": "insight:v1:0838473d6270b024bb083090535465b8c031335f664e521bda4ecf32ebae9817",
+        "match_id": "mp-static-demo-20261027",
+        "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+        "synthetic": true,
+        "rule_id": "score_change",
+        "rule_version": "1.0.0",
+        "team_id": "cedar-athletic",
+        "period": "first_half",
+        "clock": {
+          "match_elapsed_ms": 1320000,
+          "period_elapsed_ms": 1320000
+        },
+        "trigger_event_id": "422e3b674405c1fad8e94278f3cd60ce:13",
+        "trigger_sequence": 13,
+        "window": null,
+        "observed_facts": {
+          "score_before": {
+            "home": 1,
+            "away": 0
+          },
+          "score_after": {
+            "home": 1,
+            "away": 1
+          }
+        },
+        "threshold": null,
+        "evidence_event_ids": [
+          "422e3b674405c1fad8e94278f3cd60ce:13"
+        ]
+      },
+      {
+        "schema_version": 1,
+        "insight_id": "insight:v1:ca1b2e9038b233abe76b7c0aec64e2e3a1c5ea8cfe4287d26e332465949ddce7",
+        "match_id": "mp-static-demo-20261027",
+        "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+        "synthetic": true,
+        "rule_id": "score_change",
+        "rule_version": "1.0.0",
+        "team_id": "harbor-united",
+        "period": "second_half",
+        "clock": {
+          "match_elapsed_ms": 4560000,
+          "period_elapsed_ms": 1740000
+        },
+        "trigger_event_id": "422e3b674405c1fad8e94278f3cd60ce:39",
+        "trigger_sequence": 39,
+        "window": null,
+        "observed_facts": {
+          "score_before": {
+            "home": 1,
+            "away": 1
+          },
+          "score_after": {
+            "home": 2,
+            "away": 1
+          }
+        },
+        "threshold": null,
+        "evidence_event_ids": [
+          "422e3b674405c1fad8e94278f3cd60ce:39"
+        ]
+      },
+      {
+        "schema_version": 1,
+        "insight_id": "insight:v1:865191b569239852999f174c6c0d99539ef3a79ff664dd45f2597c28bf94d618",
+        "match_id": "mp-static-demo-20261027",
+        "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+        "synthetic": true,
+        "rule_id": "score_change",
+        "rule_version": "1.0.0",
+        "team_id": "cedar-athletic",
+        "period": "second_half",
+        "clock": {
+          "match_elapsed_ms": 5160000,
+          "period_elapsed_ms": 2340000
+        },
+        "trigger_event_id": "422e3b674405c1fad8e94278f3cd60ce:45",
+        "trigger_sequence": 45,
+        "window": null,
+        "observed_facts": {
+          "score_before": {
+            "home": 2,
+            "away": 1
+          },
+          "score_after": {
+            "home": 2,
+            "away": 2
+          }
+        },
+        "threshold": null,
+        "evidence_event_ids": [
+          "422e3b674405c1fad8e94278f3cd60ce:45"
+        ]
+      },
+      {
+        "schema_version": 1,
+        "insight_id": "insight:v1:45b1422fee4ba62b3bebf8d715fe74941020a3e1c9604783f1effe5f4550a5b7",
+        "match_id": "mp-static-demo-20261027",
+        "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+        "synthetic": true,
+        "rule_id": "score_change",
+        "rule_version": "1.0.0",
+        "team_id": "cedar-athletic",
+        "period": "second_half",
+        "clock": {
+          "match_elapsed_ms": 5460000,
+          "period_elapsed_ms": 2640000
+        },
+        "trigger_event_id": "422e3b674405c1fad8e94278f3cd60ce:53",
+        "trigger_sequence": 53,
+        "window": null,
+        "observed_facts": {
+          "score_before": {
+            "home": 2,
+            "away": 2
+          },
+          "score_after": {
+            "home": 2,
+            "away": 3
+          }
+        },
+        "threshold": null,
+        "evidence_event_ids": [
+          "422e3b674405c1fad8e94278f3cd60ce:53"
+        ]
+      }
+    ],
+    "next_cursor": null
+  },
+  "narrative": {
+    "schema_version": 1,
+    "narrative_id": "narrative:v1:4aa5a6611bf7b4d25614593a8b6a9495fe35f40272973369f3b0df96c936d3b4",
+    "narrative_kind": "match_insight_explanation",
+    "language": "en",
+    "match_id": "mp-static-demo-20261027",
+    "simulation_run_id": "422e3b674405c1fad8e94278f3cd60ce",
+    "synthetic": true,
+    "as_of": {
+      "sequence": 56,
+      "event_id": "422e3b674405c1fad8e94278f3cd60ce:56",
+      "match_elapsed_ms": 5700000
+    },
+    "narrative_contract_version": "1.0.0",
+    "provider": "deterministic-fake",
+    "model": "fake-v1",
+    "prompt_version": "narrative-prompt-v1",
+    "blocks": [
+      {
+        "claim_ids": [
+          "claim:v1:d2dd40f22b065a3f02f832a85e5882e5e6cf116d982f8344273e1fa9bcf5dfe5"
+        ],
+        "insight_ids": [
+          "insight:v1:badd1df8bdeca544706c23d75d26121af65fdcf253ff319dfb60e67486275777"
+        ],
+        "evidence_event_ids": [
+          "422e3b674405c1fad8e94278f3cd60ce:7"
+        ],
+        "text": "The home side scored, changing the score from 0–0 to 1–0."
+      },
+      {
+        "claim_ids": [
+          "claim:v1:d025e704a1cd132128ba4bc8e1bd1a48268152bb8409a9f1b2ecc5c04f05e78f"
+        ],
+        "insight_ids": [
+          "insight:v1:0838473d6270b024bb083090535465b8c031335f664e521bda4ecf32ebae9817"
+        ],
+        "evidence_event_ids": [
+          "422e3b674405c1fad8e94278f3cd60ce:13"
+        ],
+        "text": "The away side scored, changing the score from 1–0 to 1–1."
+      },
+      {
+        "claim_ids": [
+          "claim:v1:9dc4f6e94e9cb491bc7a6050bebae3cc00add89c15d7c0d8f8c6a005a649ae56"
+        ],
+        "insight_ids": [
+          "insight:v1:ca1b2e9038b233abe76b7c0aec64e2e3a1c5ea8cfe4287d26e332465949ddce7"
+        ],
+        "evidence_event_ids": [
+          "422e3b674405c1fad8e94278f3cd60ce:39"
+        ],
+        "text": "The home side scored, changing the score from 1–1 to 2–1."
+      },
+      {
+        "claim_ids": [
+          "claim:v1:6f05c4024a7260b52ab95eb78573f4712692dc2f91f021118fa8bce1b99a906b"
+        ],
+        "insight_ids": [
+          "insight:v1:865191b569239852999f174c6c0d99539ef3a79ff664dd45f2597c28bf94d618"
+        ],
+        "evidence_event_ids": [
+          "422e3b674405c1fad8e94278f3cd60ce:45"
+        ],
+        "text": "The away side scored, changing the score from 2–1 to 2–2."
+      },
+      {
+        "claim_ids": [
+          "claim:v1:a78946f4199a1e0ce3f630361c212c6f0fefc0c788e619b8256a022a4207d9df"
+        ],
+        "insight_ids": [
+          "insight:v1:45b1422fee4ba62b3bebf8d715fe74941020a3e1c9604783f1effe5f4550a5b7"
+        ],
+        "evidence_event_ids": [
+          "422e3b674405c1fad8e94278f3cd60ce:53"
+        ],
+        "text": "The away side scored, changing the score from 2–2 to 2–3."
+      }
+    ]
+  }
+}

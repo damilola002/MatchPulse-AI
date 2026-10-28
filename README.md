@@ -20,6 +20,12 @@ Python 3.12, Node.js 22 LTS, React, TypeScript, Vite, FastAPI, PostgreSQL, SQLAl
 
 With Docker, Node.js 22, and the project Python environment available, run `./start.sh` from this folder. It starts the local database and both application servers; open [http://127.0.0.1:5174](http://127.0.0.1:5174), then select **Create & Play Match**. The dashboard labels generated content as synthetic and uses the local deterministic narrative provider by default. Press Ctrl+C in the terminal to stop the application servers.
 
+## Public static demo
+
+Production frontend builds show a **read-only completed synthetic match snapshot** bundled with the Vite app. This public static experience needs no FastAPI service, PostgreSQL database, SSE connection, or backend credentials. It includes the final score, complete ordered event timeline, deterministic statistics, evidence-linked insights, and a pre-generated narrative from the deterministic fake provider. The hosted view is explicitly labeled read-only, synthetic, completed, and not official Premier League data; it does not create matches, run playback, ingest events, or generate narratives at runtime.
+
+Local development continues to use the interactive dashboard above, including API/SSE connectivity and the local synthetic playback controls. Vercel should build the `frontend` directory with `npm run build` and serve its `dist` output; the production build automatically selects the static read-only view.
+
 ## Local environment
 
 Copy `.env.example` to `.env`, set a unique local database password, and set `MATCHPULSE_DEMO_MODE=true` for the local dashboard's Create & Play control. Compose defines PostgreSQL only; it does not start application services. Follow the API, migration-approval, test database, SSE, and dashboard instructions in [development guidance](docs/development.md). Do not commit `.env` or use local credentials in deployed environments.
